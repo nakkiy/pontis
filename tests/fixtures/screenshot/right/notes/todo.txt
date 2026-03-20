@@ -1,0 +1,4 @@
+capture a screenshot with:
+- one renamed file selected
+- one added file visible
+- one deleted file visible
