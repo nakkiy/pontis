@@ -1,0 +1,129 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semantic version bump to apply on develop
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure develop is selected
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "develop" ]; then
+            echo "This workflow must be run on develop." >&2
+            exit 1
+          fi
+
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Calculate next version
+        id: version
+        run: |
+          current_version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)"
+          if [ -z "${current_version}" ]; then
+            echo "Failed to read package version from Cargo.toml" >&2
+            exit 1
+          fi
+
+          IFS=. read -r major minor patch <<EOF
+          ${current_version}
+          EOF
+
+          case "${{ inputs.bump }}" in
+            patch)
+              patch=$((patch + 1))
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            *)
+              echo "Unsupported bump type: ${{ inputs.bump }}" >&2
+              exit 1
+              ;;
+          esac
+
+          next_version="${major}.${minor}.${patch}"
+          release_branch="release/v${next_version}"
+
+          if git ls-remote --exit-code --heads origin "${release_branch}" >/dev/null 2>&1; then
+            echo "Release branch already exists: ${release_branch}" >&2
+            exit 1
+          fi
+
+          echo "current=${current_version}" >> "${GITHUB_OUTPUT}"
+          echo "next=${next_version}" >> "${GITHUB_OUTPUT}"
+          echo "branch=${release_branch}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create release branch
+        run: git checkout -b "${{ steps.version.outputs.branch }}"
+
+      - name: Update Cargo.toml version
+        run: |
+          perl -0pi -e 's/^version = "\Q${{ steps.version.outputs.current }}\E"$/version = "${{ steps.version.outputs.next }}"/m' Cargo.toml
+
+      - name: Update Cargo.lock
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Regenerate lockfile
+        run: cargo generate-lockfile
+
+      - name: Commit version update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore(release): prepare v${{ steps.version.outputs.next }}"
+
+      - name: Push release branch
+        run: git push origin "${{ steps.version.outputs.branch }}"
+
+      - name: Open release PR
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: "develop",
+              head: "${{ steps.version.outputs.branch }}",
+              title: "release prep: v${{ steps.version.outputs.next }}",
+              body: [
+                "## Summary",
+                "",
+                "- bump package version to `${{ steps.version.outputs.next }}`",
+                "- prepare the release branch from `develop`",
+                "",
+                "## Notes",
+                "",
+                "- merge this PR into `develop` first",
+                "- after that, open a release pull request from `develop` to `main`",
+              ].join("\n"),
+            });
+
+      - name: Summary
+        run: |
+          echo "Prepared ${{ steps.version.outputs.branch }} and created a PR to develop."

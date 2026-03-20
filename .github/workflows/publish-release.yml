@@ -1,0 +1,171 @@
+name: Publish Release
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  metadata:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'develop' &&
+      startsWith(github.event.pull_request.title, 'release publish: v')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      package_name: ${{ steps.version.outputs.package_name }}
+      binary_name: ${{ steps.version.outputs.binary_name }}
+      merge_sha: ${{ github.event.pull_request.merge_commit_sha }}
+
+    steps:
+      - name: Checkout merged main
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Read release metadata
+        id: version
+        run: |
+          cargo metadata --no-deps --format-version 1 > metadata.json
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          with open("metadata.json", "r", encoding="utf-8") as f:
+              metadata = json.load(f)
+
+          resolve = metadata.get("resolve") or {}
+          root_id = resolve.get("root")
+          packages = {pkg["id"]: pkg for pkg in metadata.get("packages", [])}
+          package = packages.get(root_id)
+
+          if package is None:
+              workspace_root = metadata.get("workspace_root")
+              candidates = [
+                  pkg
+                  for pkg in metadata.get("packages", [])
+                  if pkg.get("manifest_path", "").startswith(workspace_root or "")
+              ]
+              if len(candidates) == 1:
+                  package = candidates[0]
+
+          if package is None:
+              print("Failed to resolve root package from cargo metadata", file=sys.stderr)
+              sys.exit(1)
+
+          version = package.get("version")
+          package_name = package.get("name")
+
+          binary_name = package.get("default_run")
+          if not binary_name:
+              bins = [t["name"] for t in package.get("targets", []) if "bin" in t.get("kind", [])]
+              if len(bins) == 1:
+                  binary_name = bins[0]
+              elif package_name in bins:
+                  binary_name = package_name
+              elif bins:
+                  binary_name = bins[0]
+
+          if not version or not package_name or not binary_name:
+              print("Missing package version/name/binary name in cargo metadata", file=sys.stderr)
+              sys.exit(1)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"version={version}\n")
+              out.write(f"tag=v{version}\n")
+              out.write(f"package_name={package_name}\n")
+              out.write(f"binary_name={binary_name}\n")
+          PY
+
+      - name: Create tag
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+          sha="${{ github.event.pull_request.merge_commit_sha }}"
+
+          if git rev-parse "${tag}" >/dev/null 2>&1; then
+            echo "Tag already exists: ${tag}"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${tag}" "${sha}"
+          git push origin "${tag}"
+
+  build:
+    needs: metadata
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.metadata.outputs.merge_sha }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust target
+        run: rustup target add "${{ matrix.target }}"
+
+      - name: Build release binary
+        run: cargo build --release --locked --target "${{ matrix.target }}"
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          version="${{ needs.metadata.outputs.version }}"
+          package_name="${{ needs.metadata.outputs.package_name }}"
+          binary_name="${{ needs.metadata.outputs.binary_name }}"
+          archive_root="${package_name}-v${version}-${{ matrix.target }}"
+          mkdir -p "${archive_root}"
+          cp "target/${{ matrix.target }}/release/${binary_name}" "${archive_root}/"
+          cp README.md LICENSE-MIT LICENSE-APACHE "${archive_root}/"
+          tar -czf "${archive_root}.tar.gz" "${archive_root}"
+          shasum -a 256 "${archive_root}.tar.gz" > "${archive_root}.tar.gz.sha256"
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.metadata.outputs.package_name }}-${{ matrix.target }}
+          path: |
+            ${{ needs.metadata.outputs.package_name }}-v${{ needs.metadata.outputs.version }}-${{ matrix.target }}.tar.gz
+            ${{ needs.metadata.outputs.package_name }}-v${{ needs.metadata.outputs.version }}-${{ matrix.target }}.tar.gz.sha256
+
+  release:
+    needs:
+      - metadata
+      - build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.metadata.outputs.tag }}
+          generate_release_notes: true
+          files: dist/*
