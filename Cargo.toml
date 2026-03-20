@@ -1,6 +1,6 @@
 [package]
 name = "pontis"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 default-run = "pontis"
 description = "Terminal UI diff and merge tool for files, directories, and Git comparisons"
