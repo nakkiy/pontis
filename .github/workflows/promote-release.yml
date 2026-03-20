@@ -1,0 +1,78 @@
+name: Promote Release
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  promote:
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create develop-to-main release PR
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const version = "${{ github.event.pull_request.head.ref }}".replace("release/v", "");
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const base = "main";
+            const head = "develop";
+
+            const existing = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              base,
+              head: `${owner}:${head}`,
+            });
+
+            if (existing.data.length > 0) {
+              core.notice(`An open develop -> main PR already exists: #${existing.data[0].number}`);
+              return;
+            }
+
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            let lastError;
+
+            for (let attempt = 1; attempt <= 12; attempt += 1) {
+              try {
+                await github.rest.git.getRef({ owner, repo, ref: `heads/${base}` });
+                await github.rest.git.getRef({ owner, repo, ref: `heads/${head}` });
+
+                await github.rest.pulls.create({
+                  owner,
+                  repo,
+                  base,
+                  head,
+                  title: `release publish: v${version}`,
+                  body: [
+                    "## Summary",
+                    "",
+                    `- promote develop to main for v${version}`,
+                    "",
+                    "## Notes",
+                    "",
+                    "- merging this PR triggers the publish workflow",
+                  ].join("\n"),
+                });
+                return;
+              } catch (error) {
+                lastError = error;
+                core.warning(`Attempt ${attempt} failed: ${error.message}`);
+                await sleep(5000);
+              }
+            }
+
+            throw lastError;
