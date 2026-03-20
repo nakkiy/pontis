@@ -1,0 +1,36 @@
+# pontis config example
+
+# Create <filename>.<extension>.bak before overwriting existing files on save.
+backup_on_save = false
+
+# Disable syntax highlight when either side exceeds this size (bytes).
+highlight_max_bytes = 524288
+
+# Disable syntax highlight when either side exceeds this line count.
+highlight_max_lines = 8000
+
+# Syntax theme name (default themes + user themes under ~/.config/pontis/themes).
+# Leave empty to use built-in default selection. Use file stem name (e.g. DarkNeon for DarkNeon.tmTheme).
+theme = ""
+
+# Highlight changed character ranges inside changed lines.
+inline_diff = true
+
+# Line-ending comparison policy:
+# - "compare": treat CR/LF/CRLF differences as significant
+# - "ignore": ignore CR/LF/CRLF differences
+line_ending_policy = "compare"
+
+# Whitespace comparison policy:
+# - "compare": treat whitespace as significant
+# - "ignore": ignore all whitespace differences (leading/internal/trailing, spaces/tabs)
+whitespace_policy = "compare"
+
+# Show line numbers in left/right panes.
+line_numbers = false
+
+# Line-ending marker visibility in diff pane:
+# - "hidden": do not show markers
+# - "all": show markers on all lines
+# - "diff_only": show markers only on diff hunks
+line_ending_visibility = "hidden"
