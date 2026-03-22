@@ -54,8 +54,8 @@ pub(crate) fn load_diff_data(
         compute_hunks(
             &left_content.text,
             &right_content.text,
-            cfg.whitespace_policy(),
-            cfg.line_ending_policy(),
+            cfg.whitespace(),
+            cfg.line_endings(),
         )
     };
     let status = derive_loaded_status(
@@ -107,8 +107,8 @@ fn should_limit_highlight(
     right_bytes: usize,
     cfg: &AppSettings,
 ) -> bool {
-    left_bytes.max(right_bytes) > cfg.highlight_max_bytes
-        || left_text.lines().count().max(right_text.lines().count()) > cfg.highlight_max_lines
+    left_bytes.max(right_bytes) > cfg.highlight.max_bytes
+        || left_text.lines().count().max(right_text.lines().count()) > cfg.highlight.max_lines
 }
 
 #[cfg(test)]
@@ -148,8 +148,11 @@ mod tests {
     #[test]
     fn highlight_limit_uses_bytes_or_lines() {
         let cfg = AppSettings {
-            highlight_max_bytes: 4,
-            highlight_max_lines: 2,
+            highlight: crate::settings::HighlightSettings {
+                max_bytes: 4,
+                max_lines: 2,
+                ..AppSettings::default().highlight
+            },
             ..AppSettings::default()
         };
         assert!(should_limit_highlight("abc", "12345", 3, 5, &cfg));

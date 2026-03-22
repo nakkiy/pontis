@@ -12,7 +12,6 @@ impl App {
     pub(crate) fn new(
         files: Vec<DiffFile>,
         roots: Roots,
-        backup_on_save: bool,
         settings: AppSettings,
         loader: Arc<dyn DiffLoader>,
         allow_left_write: bool,
@@ -31,7 +30,6 @@ impl App {
             should_quit: false,
             scroll: Default::default(),
             file_list_scroll: Default::default(),
-            backup_on_save,
             allow_left_write,
             allow_right_write,
             settings,

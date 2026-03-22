@@ -47,8 +47,12 @@ fn save_all_writes_dirty_sides() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
-        AppSettings::default(),
+        AppSettings {
+            save: crate::settings::SaveSettings {
+                create_backup: true,
+            },
+            ..AppSettings::default()
+        },
         test_loader(),
         true,
         true,
@@ -106,8 +110,12 @@ fn save_current_creates_backup_when_enabled() {
     let mut app = App::new(
         vec![file],
         roots,
-        true,
-        AppSettings::default(),
+        AppSettings {
+            save: crate::settings::SaveSettings {
+                create_backup: true,
+            },
+            ..AppSettings::default()
+        },
         test_loader(),
         true,
         true,
@@ -163,7 +171,6 @@ fn save_current_preserves_utf8_bom_when_source_had_bom() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
@@ -187,7 +194,6 @@ fn save_current_keeps_read_only_dirty_side_unsaved() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         false,
@@ -243,7 +249,6 @@ fn save_all_only_writes_writable_sides() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         false,
@@ -282,7 +287,6 @@ fn save_current_is_noop_when_no_visible_file_is_selected() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,

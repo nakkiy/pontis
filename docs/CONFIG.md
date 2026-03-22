@@ -25,60 +25,28 @@ pontis --config /path/to/config.toml <left> <right>
 
 ## TOML Keys
 
-The current config file format uses flat keys.
+The config file uses section-based TOML. 
 
 ```toml
-backup_on_save = false
-highlight_max_bytes = 524288
-highlight_max_lines = 8000
-theme = ""
+[compare]
+whitespace = "compare"
+line_endings = "compare"
 inline_diff = true
-line_ending_policy = "compare"
-whitespace_policy = "compare"
+
+[view]
 line_numbers = false
 line_ending_visibility = "hidden"
+
+[highlight]
+theme = ""
+max_bytes = 524288
+max_lines = 8000
+
+[save]
+create_backup = false
 ```
 
-### `backup_on_save`
-
-* Type: `bool`
-* Default: `false`
-* Controls whether a backup is created before writing an existing file
-
-### `highlight_max_bytes`
-
-* Type: `usize`
-* Default: `524288`
-* Disables syntax highlighting for files larger than this
-
-### `highlight_max_lines`
-
-* Type: `usize`
-* Default: `8000`
-* Also disables syntax highlighting when the file has more than this many lines
-
-### `theme`
-
-* Type: `string`
-* Default: `""`
-* Selects the theme by name
-* An empty string means the default theme selection is used
-
-### `inline_diff`
-
-* Type: `bool`
-* Default: `true`
-* Enables inline diff highlighting
-
-### `line_ending_policy`
-
-* Type: `string`
-* Default: `"compare"`
-* Values:
-  * `"compare"`: include line ending differences in comparison
-  * `"ignore"`: ignore CR / LF / CRLF differences
-
-### `whitespace_policy`
+### `[compare].whitespace`
 
 * Type: `string`
 * Default: `"compare"`
@@ -88,16 +56,30 @@ line_ending_visibility = "hidden"
 
 Note:
 
-* With `whitespace_policy = "ignore"`, inline diff still highlights non-whitespace changes
+* With `[compare].whitespace = "ignore"`, inline diff still highlights non-whitespace changes
 * Whitespace-only changes are not highlighted in inline diff
 
-### `line_numbers`
+### `[compare].line_endings`
+
+* Type: `string`
+* Default: `"compare"`
+* Values:
+  * `"compare"`: include line ending differences in comparison
+  * `"ignore"`: ignore CR / LF / CRLF differences
+
+### `[compare].inline_diff`
+
+* Type: `bool`
+* Default: `true`
+* Enables inline diff highlighting
+
+### `[view].line_numbers`
 
 * Type: `bool`
 * Default: `false`
 * Shows line numbers in the diff pane
 
-### `line_ending_visibility`
+### `[view].line_ending_visibility`
 
 * Type: `string`
 * Default: `"hidden"`
@@ -112,21 +94,46 @@ Displayed markers:
 * `↓`: `LF`
 * `↩`: `CRLF`
 
+### `[highlight].theme`
+
+* Type: `string`
+* Default: `""`
+* Selects the theme by name
+* An empty string means the default theme selection is used
+
+### `[highlight].max_bytes`
+
+* Type: `usize`
+* Default: `524288`
+* Disables syntax highlighting for files larger than this
+
+### `[highlight].max_lines`
+
+* Type: `usize`
+* Default: `8000`
+* Also disables syntax highlighting when the file has more than this many lines
+
+### `[save].create_backup`
+
+* Type: `bool`
+* Default: `false`
+* Controls whether a backup is created before writing an existing file
+
 ---
 
 ## Environment Variables
 
 The following environment variables can override config values:
 
-* `PONTIS_BACKUP_ON_SAVE`
+* `PONTIS_SAVE_CREATE_BACKUP`
 * `PONTIS_HIGHLIGHT_MAX_BYTES`
 * `PONTIS_HIGHLIGHT_MAX_LINES`
-* `PONTIS_THEME`
-* `PONTIS_INLINE_DIFF`
-* `PONTIS_LINE_ENDING_POLICY`
-* `PONTIS_WHITESPACE_POLICY`
-* `PONTIS_LINE_NUMBERS`
-* `PONTIS_LINE_ENDING_VISIBILITY`
+* `PONTIS_HIGHLIGHT_THEME`
+* `PONTIS_COMPARE_INLINE_DIFF`
+* `PONTIS_COMPARE_LINE_ENDINGS`
+* `PONTIS_COMPARE_WHITESPACE`
+* `PONTIS_VIEW_LINE_NUMBERS`
+* `PONTIS_VIEW_LINE_ENDING_VISIBILITY`
 
 ---
 
@@ -151,7 +158,8 @@ Notes:
 ### Ignore whitespace-only changes
 
 ```toml
-whitespace_policy = "ignore"
+[compare]
+whitespace = "ignore"
 inline_diff = true
 ```
 
@@ -160,40 +168,13 @@ In that case whitespace-only differences are ignored, while inline diff still hi
 ### Show line ending markers
 
 ```toml
+[view]
 line_ending_visibility = "all"
 ```
 
 ### Keep backups on save
 
 ```toml
-backup_on_save = true
-```
-
----
-
-## Planned Change
-
-There is a long-term plan to move from flat config keys to section-based TOML.
-
-Target shape:
-
-```toml
-[compare]
-whitespace = "compare"
-line_endings = "compare"
-inline_diff = true
-
-[view]
-line_numbers = false
-line_ending_visibility = "hidden"
-
-[highlight]
-theme = ""
-max_bytes = 524288
-max_lines = 8000
-
 [save]
-backup_on_save = false
+create_backup = true
 ```
-
-This is not the current format yet. It is a future direction.

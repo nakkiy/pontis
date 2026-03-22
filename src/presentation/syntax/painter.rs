@@ -60,8 +60,8 @@ impl SyntaxPainter {
 }
 
 fn resolve_theme_name(cfg: &AppSettings, ts: &ThemeSet) -> String {
-    if !cfg.theme.is_empty() && ts.themes.contains_key(&cfg.theme) {
-        return cfg.theme.clone();
+    if !cfg.highlight.theme.is_empty() && ts.themes.contains_key(&cfg.highlight.theme) {
+        return cfg.highlight.theme.clone();
     }
     pick_theme_name(ts)
 }

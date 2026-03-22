@@ -59,9 +59,9 @@ This directory collects fixtures for integration tests and manual verification.
 - Main usage:
   - Manual verification
 - Example:
-  - `PONTIS_WHITESPACE_POLICY=compare cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
-  - `PONTIS_WHITESPACE_POLICY=ignore cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
-  - `PONTIS_WHITESPACE_POLICY=ignore PONTIS_INLINE_DIFF=false cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
+  - `PONTIS_COMPARE_WHITESPACE=compare cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
+  - `PONTIS_COMPARE_WHITESPACE=ignore cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
+  - `PONTIS_COMPARE_WHITESPACE=ignore PONTIS_COMPARE_INLINE_DIFF=false cargo run -- tests/fixtures/whitespace/left tests/fixtures/whitespace/right`
 
 ### `screenshot/left/`, `screenshot/right/`
 - Purpose:
