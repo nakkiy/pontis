@@ -193,6 +193,7 @@ customCommands:
 | `u / r`     | undo / redo      |
 | `e / E`     | editor で開く    |
 | `s / S`     | 保存             |
+| `l`         | 比較を再読込     |
 
 ---
 
@@ -227,6 +228,9 @@ customCommands:
 * `pontis git` / `pontis git --rev` は右側のみ書き込み可
 * `pontis git --staged` は左右とも read-only
 * `pontis git --diff` と `git difftool` 連携は左右とも read-only
+* `l` による再読込はローカル比較と可変な git 比較（`pontis git`, `pontis git --rev`）で使えます
+* `l` による再読込は `pontis git --staged`、`pontis git --diff`、`git difftool` 連携では使えません
+* 未保存変更がある間は再読込できません
 * 外部 editor の変更は一度メモリへ取り込み、保存は `s` / `S` で明示的に行います
 * 外部 editor から戻ると merge の undo / redo 履歴はクリアされます
 

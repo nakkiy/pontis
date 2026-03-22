@@ -80,6 +80,12 @@ impl App {
         self.settings.save.create_backup
     }
 
+    pub(crate) fn has_unsaved_changes(&self) -> bool {
+        self.files
+            .iter()
+            .any(|file| file.left_dirty || file.right_dirty)
+    }
+
     pub(crate) fn settings(&self) -> &AppSettings {
         &self.settings
     }

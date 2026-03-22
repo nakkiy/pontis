@@ -160,5 +160,7 @@ Notes:
 ## 7. Notes
 
 * `git --staged` and `git --diff` are read-only comparisons
+* `l` reload is available in `pontis git` and `pontis git --rev`, but not in `git --staged`, `git --diff`, or the `git difftool` bridge
+* Reload is rejected while there are unsaved changes
 * Binary files are not rendered as text diffs
 * Binary files do not support hunk merge
