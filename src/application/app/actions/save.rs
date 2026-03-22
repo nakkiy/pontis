@@ -80,7 +80,7 @@ impl App {
             FileSide::Left => self.allow_left_write(),
             FileSide::Right => self.allow_right_write(),
         };
-        let backup_on_save = self.backup_on_save();
+        let create_backup = self.create_backup();
         save_file_side_if_dirty(
             &mut self.files[idx],
             side,
@@ -88,7 +88,7 @@ impl App {
             roots_mode,
             roots_left,
             roots_right,
-            backup_on_save,
+            create_backup,
         )
     }
 }

@@ -45,7 +45,6 @@ pub(crate) struct App {
     scroll: view_state::ScrollState,
     file_list_scroll: view_state::ScrollState,
     status_line: String,
-    backup_on_save: bool,
     allow_left_write: bool,
     allow_right_write: bool,
     settings: AppSettings,

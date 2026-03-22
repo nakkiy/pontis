@@ -16,13 +16,13 @@ pub(crate) fn resolve_config(cli: CliOverrides) -> (AppSettings, Option<PathBuf>
 
     apply_env_config(&mut cfg, &mut warnings);
 
-    if cfg.highlight_max_bytes == 0 {
-        warnings.push("highlight_max_bytes cannot be 0; using default".to_string());
-        cfg.highlight_max_bytes = DEFAULT_HIGHLIGHT_MAX_BYTES;
+    if cfg.highlight.max_bytes == 0 {
+        warnings.push("highlight.max_bytes cannot be 0; using default".to_string());
+        cfg.highlight.max_bytes = DEFAULT_HIGHLIGHT_MAX_BYTES;
     }
-    if cfg.highlight_max_lines == 0 {
-        warnings.push("highlight_max_lines cannot be 0; using default".to_string());
-        cfg.highlight_max_lines = DEFAULT_HIGHLIGHT_MAX_LINES;
+    if cfg.highlight.max_lines == 0 {
+        warnings.push("highlight.max_lines cannot be 0; using default".to_string());
+        cfg.highlight.max_lines = DEFAULT_HIGHLIGHT_MAX_LINES;
     }
 
     (cfg, path, warnings)

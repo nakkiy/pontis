@@ -76,8 +76,8 @@ impl App {
         self.allow_right_write
     }
 
-    pub(crate) fn backup_on_save(&self) -> bool {
-        self.backup_on_save
+    pub(crate) fn create_backup(&self) -> bool {
+        self.settings.save.create_backup
     }
 
     pub(crate) fn settings(&self) -> &AppSettings {
@@ -128,7 +128,7 @@ impl App {
     }
 
     pub(crate) fn refresh_current_file_after_text_change(&mut self) {
-        let compare_policies = self.settings.compare_policies;
+        let compare_policies = self.settings.compare.policies;
         let Some(file) = self.current_file_mut() else {
             return;
         };

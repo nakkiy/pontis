@@ -119,8 +119,8 @@ impl App {
                     &file.left_text,
                     &file.right_text,
                     self.current_hunk,
-                    self.settings.whitespace_policy(),
-                    self.settings.line_ending_policy(),
+                    self.settings.whitespace(),
+                    self.settings.line_endings(),
                 )
             })
             .map(|row| row as u16)

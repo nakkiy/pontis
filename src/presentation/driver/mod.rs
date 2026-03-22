@@ -65,11 +65,9 @@ fn run_loading_loop(
     loop {
         match target_rx.try_recv() {
             Ok(Ok((files, roots, allow_left_write, allow_right_write))) => {
-                let backup_on_save = settings.backup_on_save;
                 let mut app = App::new(
                     files,
                     roots,
-                    backup_on_save,
                     settings,
                     loader,
                     allow_left_write,

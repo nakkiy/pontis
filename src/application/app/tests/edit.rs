@@ -46,8 +46,12 @@ fn external_edit_clears_undo_and_redo_history() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
-        AppSettings::default(),
+        AppSettings {
+            save: crate::settings::SaveSettings {
+                create_backup: true,
+            },
+            ..AppSettings::default()
+        },
         test_loader(),
         true,
         true,
@@ -85,7 +89,7 @@ fn external_edit_clears_undo_and_redo_history() {
 
 #[cfg(unix)]
 #[test]
-fn external_edit_does_not_create_backup_even_when_backup_on_save_is_enabled() {
+fn external_edit_does_not_create_backup_even_when_create_backup_is_enabled() {
     use std::os::unix::fs::PermissionsExt;
     let _guard = editor_env_lock().lock().expect("lock EDITOR env");
 
@@ -119,7 +123,6 @@ fn external_edit_does_not_create_backup_even_when_backup_on_save_is_enabled() {
     let mut app = App::new(
         vec![file],
         roots,
-        true,
         AppSettings::default(),
         test_loader(),
         true,
@@ -183,7 +186,6 @@ fn external_edit_without_changes_preserves_dirty_merge_state_and_does_not_save()
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
@@ -254,7 +256,6 @@ fn external_edit_failure_does_not_modify_target_file() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
@@ -297,7 +298,6 @@ fn external_edit_is_noop_when_no_visible_file_is_selected() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,

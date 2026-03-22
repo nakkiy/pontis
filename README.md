@@ -243,16 +243,25 @@ customCommands:
 * `${XDG_CONFIG_HOME}/pontis/config.toml`
 * `~/.config/pontis/config.toml`
 
+The config file uses section-based TOML. 
+
 ```toml
-backup_on_save = false
-highlight_max_bytes = 524288
-highlight_max_lines = 8000
-theme = ""
+[compare]
+whitespace = "compare"
+line_endings = "compare"
 inline_diff = true
-line_ending_policy = "compare"
-whitespace_policy = "compare"
+
+[view]
 line_numbers = false
 line_ending_visibility = "hidden"
+
+[highlight]
+theme = ""
+max_bytes = 524288
+max_lines = 8000
+
+[save]
+create_backup = false
 ```
 
 ---
@@ -265,15 +274,15 @@ line_ending_visibility = "hidden"
 
 ### Environment Variables
 
-* `PONTIS_BACKUP_ON_SAVE`
+* `PONTIS_SAVE_CREATE_BACKUP`
 * `PONTIS_HIGHLIGHT_MAX_BYTES`
 * `PONTIS_HIGHLIGHT_MAX_LINES`
-* `PONTIS_THEME`
-* `PONTIS_INLINE_DIFF`
-* `PONTIS_LINE_ENDING_POLICY`
-* `PONTIS_WHITESPACE_POLICY`
-* `PONTIS_LINE_NUMBERS`
-* `PONTIS_LINE_ENDING_VISIBILITY`
+* `PONTIS_HIGHLIGHT_THEME`
+* `PONTIS_COMPARE_INLINE_DIFF`
+* `PONTIS_COMPARE_LINE_ENDINGS`
+* `PONTIS_COMPARE_WHITESPACE`
+* `PONTIS_VIEW_LINE_NUMBERS`
+* `PONTIS_VIEW_LINE_ENDING_VISIBILITY`
 
 ---
 

@@ -62,7 +62,7 @@ pub fn build_diff_files_with_precomputed_renames(
             Some(right.to_path_buf()),
             left_size,
             right_size,
-            left_size.max(right_size) > cfg.highlight_max_bytes,
+            left_size.max(right_size) > cfg.highlight.max_bytes,
             status,
         );
         load_diff_file_with_config(&mut file, cfg)?;

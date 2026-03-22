@@ -386,7 +386,10 @@ mod tests {
         assert!(!strict_entry.hunks.is_empty());
 
         let cfg = AppSettings {
-            compare_policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+            compare: crate::settings::CompareSettings {
+                policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+                ..AppSettings::default().compare
+            },
             ..AppSettings::default()
         };
         let (ignore_files, _) =
@@ -436,7 +439,10 @@ mod tests {
         assert!(!strict_entry.hunks.is_empty());
 
         let cfg = AppSettings {
-            compare_policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+            compare: crate::settings::CompareSettings {
+                policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+                ..AppSettings::default().compare
+            },
             ..AppSettings::default()
         };
         let (ignore_files, _) = build_git_diff_files(&repo, &cfg, &GitCompareMode::Staged, "HEAD")

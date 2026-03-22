@@ -25,60 +25,28 @@ pontis --config /path/to/config.toml <left> <right>
 
 ## TOML キー
 
-現行の設定ファイルはフラットなキー形式です。
+設定ファイルはセクション形式の TOML を使います。
 
 ```toml
-backup_on_save = false
-highlight_max_bytes = 524288
-highlight_max_lines = 8000
-theme = ""
+[compare]
+whitespace = "compare"
+line_endings = "compare"
 inline_diff = true
-line_ending_policy = "compare"
-whitespace_policy = "compare"
+
+[view]
 line_numbers = false
 line_ending_visibility = "hidden"
+
+[highlight]
+theme = ""
+max_bytes = 524288
+max_lines = 8000
+
+[save]
+create_backup = false
 ```
 
-### `backup_on_save`
-
-* 型: `bool`
-* 既定値: `false`
-* 保存時に既存ファイルのバックアップを作るかを切り替えます
-
-### `highlight_max_bytes`
-
-* 型: `usize`
-* 既定値: `524288`
-* これを超えるファイルでは syntax highlight を無効化します
-
-### `highlight_max_lines`
-
-* 型: `usize`
-* 既定値: `8000`
-* 行数がこれを超える場合も syntax highlight を無効化します
-
-### `theme`
-
-* 型: `string`
-* 既定値: `""`
-* 使用するテーマ名です
-* 空文字の場合は既定テーマを選びます
-
-### `inline_diff`
-
-* 型: `bool`
-* 既定値: `true`
-* 行内差分の強調を有効化します
-
-### `line_ending_policy`
-
-* 型: `string`
-* 既定値: `"compare"`
-* 値:
-  * `"compare"`: 改行コード差分を比較に含める
-  * `"ignore"`: CR / LF / CRLF の差分を比較から除外する
-
-### `whitespace_policy`
+### `[compare].whitespace`
 
 * 型: `string`
 * 既定値: `"compare"`
@@ -88,16 +56,30 @@ line_ending_visibility = "hidden"
 
 補足:
 
-* `whitespace_policy = "ignore"` でも、inline diff は非空白の差分を強調します
+* `[compare].whitespace = "ignore"` でも、inline diff は非空白の差分を強調します
 * 空白だけの差分は inline diff では強調しません
 
-### `line_numbers`
+### `[compare].line_endings`
+
+* 型: `string`
+* 既定値: `"compare"`
+* 値:
+  * `"compare"`: 改行コード差分を比較に含める
+  * `"ignore"`: CR / LF / CRLF の差分を比較から除外する
+
+### `[compare].inline_diff`
+
+* 型: `bool`
+* 既定値: `true`
+* 行内差分の強調を有効化します
+
+### `[view].line_numbers`
 
 * 型: `bool`
 * 既定値: `false`
 * diff pane に行番号を表示します
 
-### `line_ending_visibility`
+### `[view].line_ending_visibility`
 
 * 型: `string`
 * 既定値: `"hidden"`
@@ -112,21 +94,46 @@ line_ending_visibility = "hidden"
 * `↓`: `LF`
 * `↩`: `CRLF`
 
+### `[highlight].theme`
+
+* 型: `string`
+* 既定値: `""`
+* 使用するテーマ名です
+* 空文字の場合は既定テーマを選びます
+
+### `[highlight].max_bytes`
+
+* 型: `usize`
+* 既定値: `524288`
+* これを超えるファイルでは syntax highlight を無効化します
+
+### `[highlight].max_lines`
+
+* 型: `usize`
+* 既定値: `8000`
+* 行数がこれを超える場合も syntax highlight を無効化します
+
+### `[save].create_backup`
+
+* 型: `bool`
+* 既定値: `false`
+* 保存時に既存ファイルのバックアップを作るかを切り替えます
+
 ---
 
 ## 環境変数
 
 次の環境変数で設定を上書きできます。
 
-* `PONTIS_BACKUP_ON_SAVE`
+* `PONTIS_SAVE_CREATE_BACKUP`
 * `PONTIS_HIGHLIGHT_MAX_BYTES`
 * `PONTIS_HIGHLIGHT_MAX_LINES`
-* `PONTIS_THEME`
-* `PONTIS_INLINE_DIFF`
-* `PONTIS_LINE_ENDING_POLICY`
-* `PONTIS_WHITESPACE_POLICY`
-* `PONTIS_LINE_NUMBERS`
-* `PONTIS_LINE_ENDING_VISIBILITY`
+* `PONTIS_HIGHLIGHT_THEME`
+* `PONTIS_COMPARE_INLINE_DIFF`
+* `PONTIS_COMPARE_LINE_ENDINGS`
+* `PONTIS_COMPARE_WHITESPACE`
+* `PONTIS_VIEW_LINE_NUMBERS`
+* `PONTIS_VIEW_LINE_ENDING_VISIBILITY`
 
 ---
 
@@ -151,7 +158,8 @@ line_ending_visibility = "hidden"
 ### 空白差分を無視したい
 
 ```toml
-whitespace_policy = "ignore"
+[compare]
+whitespace = "ignore"
 inline_diff = true
 ```
 
@@ -160,40 +168,13 @@ inline_diff = true
 ### 行末記号を見たい
 
 ```toml
+[view]
 line_ending_visibility = "all"
 ```
 
 ### バックアップを残したい
 
 ```toml
-backup_on_save = true
-```
-
----
-
-## 予定
-
-長期的には設定ファイルをフラットキーからセクション形式へ移行する計画があります。
-
-想定例:
-
-```toml
-[compare]
-whitespace = "compare"
-line_endings = "compare"
-inline_diff = true
-
-[view]
-line_numbers = false
-line_ending_visibility = "hidden"
-
-[highlight]
-theme = ""
-max_bytes = 524288
-max_lines = 8000
-
 [save]
-backup_on_save = false
+create_backup = true
 ```
-
-現時点ではまだこの形式ではなく、上記は将来案です。

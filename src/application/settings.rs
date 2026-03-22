@@ -11,38 +11,66 @@ pub enum LineEndingVisibility {
 }
 
 #[derive(Debug, Clone)]
-pub struct AppSettings {
-    pub backup_on_save: bool,
-    pub highlight_max_bytes: usize,
-    pub highlight_max_lines: usize,
-    pub theme: String,
+pub struct CompareSettings {
     pub inline_diff: bool,
+    pub policies: DiffComparePolicies,
+}
+
+#[derive(Debug, Clone)]
+pub struct ViewSettings {
     pub line_numbers: bool,
     pub line_ending_visibility: LineEndingVisibility,
-    pub compare_policies: DiffComparePolicies,
+}
+
+#[derive(Debug, Clone)]
+pub struct HighlightSettings {
+    pub theme: String,
+    pub max_bytes: usize,
+    pub max_lines: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SaveSettings {
+    pub create_backup: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct AppSettings {
+    pub compare: CompareSettings,
+    pub view: ViewSettings,
+    pub highlight: HighlightSettings,
+    pub save: SaveSettings,
 }
 
 impl AppSettings {
-    pub const fn whitespace_policy(&self) -> WhitespacePolicy {
-        self.compare_policies.whitespace_policy
+    pub const fn whitespace(&self) -> WhitespacePolicy {
+        self.compare.policies.whitespace_policy
     }
 
-    pub const fn line_ending_policy(&self) -> LineEndingPolicy {
-        self.compare_policies.line_ending_policy
+    pub const fn line_endings(&self) -> LineEndingPolicy {
+        self.compare.policies.line_ending_policy
     }
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            backup_on_save: false,
-            highlight_max_bytes: DEFAULT_HIGHLIGHT_MAX_BYTES,
-            highlight_max_lines: DEFAULT_HIGHLIGHT_MAX_LINES,
-            theme: String::new(),
-            inline_diff: true,
-            line_numbers: false,
-            line_ending_visibility: LineEndingVisibility::Hidden,
-            compare_policies: DiffComparePolicies::compare(),
+            compare: CompareSettings {
+                inline_diff: true,
+                policies: DiffComparePolicies::compare(),
+            },
+            view: ViewSettings {
+                line_numbers: false,
+                line_ending_visibility: LineEndingVisibility::Hidden,
+            },
+            highlight: HighlightSettings {
+                theme: String::new(),
+                max_bytes: DEFAULT_HIGHLIGHT_MAX_BYTES,
+                max_lines: DEFAULT_HIGHLIGHT_MAX_LINES,
+            },
+            save: SaveSettings {
+                create_backup: false,
+            },
         }
     }
 }
@@ -55,20 +83,20 @@ mod tests {
     #[test]
     fn default_line_ending_visibility_is_hidden() {
         assert_eq!(
-            AppSettings::default().line_ending_visibility,
+            AppSettings::default().view.line_ending_visibility,
             LineEndingVisibility::Hidden
         );
     }
 
     #[test]
     fn inline_diff_is_enabled_by_default() {
-        assert!(AppSettings::default().inline_diff);
+        assert!(AppSettings::default().compare.inline_diff);
     }
 
     #[test]
     fn line_ending_policy_defaults_to_compare() {
         assert_eq!(
-            AppSettings::default().line_ending_policy(),
+            AppSettings::default().line_endings(),
             LineEndingPolicy::Compare
         );
     }
@@ -76,7 +104,7 @@ mod tests {
     #[test]
     fn whitespace_policy_defaults_to_compare() {
         assert_eq!(
-            AppSettings::default().whitespace_policy(),
+            AppSettings::default().whitespace(),
             WhitespacePolicy::Compare
         );
     }

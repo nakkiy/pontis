@@ -86,14 +86,14 @@ pub(super) fn render_diff_view(
         let rows = build_aligned_rows(
             &file,
             app.current_hunk(),
-            app.settings().whitespace_policy(),
-            app.settings().line_ending_policy(),
+            app.settings().whitespace(),
+            app.settings().line_endings(),
         );
         let render_opts = DiffLineRenderOpts {
-            inline_diff: app.settings().inline_diff,
-            whitespace_policy: app.settings().whitespace_policy(),
-            show_line_numbers: app.settings().line_numbers,
-            line_ending_visibility: app.settings().line_ending_visibility,
+            inline_diff: app.settings().compare.inline_diff,
+            whitespace_policy: app.settings().whitespace(),
+            show_line_numbers: app.settings().view.line_numbers,
+            line_ending_visibility: app.settings().view.line_ending_visibility,
         };
         let left_lines = build_side_lines(&rows, &file, true, render_opts, painter);
         let right_lines = build_side_lines(&rows, &file, false, render_opts, painter);
@@ -101,8 +101,8 @@ pub(super) fn render_diff_view(
         let right_title = pane_title(&file, false);
         let max_render_width = max_render_width_cached(
             &rows,
-            app.settings().line_numbers,
-            app.settings().line_ending_visibility,
+            app.settings().view.line_numbers,
+            app.settings().view.line_ending_visibility,
         );
 
         cache.entry = Some(DiffViewCacheEntry {

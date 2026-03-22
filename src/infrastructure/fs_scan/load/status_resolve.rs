@@ -27,8 +27,8 @@ pub(crate) fn resolve_status_only(
     let text_equal = texts_equal_fast(
         &left_content.text,
         &right_content.text,
-        cfg.whitespace_policy(),
-        cfg.line_ending_policy(),
+        cfg.whitespace(),
+        cfg.line_endings(),
     );
     Ok(derive_status_only(
         left_path.is_some(),
