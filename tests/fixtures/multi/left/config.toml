@@ -1,3 +1,6 @@
-backup_on_save = false
-highlight_max_bytes = 524288
-highlight_max_lines = 8000
+[highlight]
+max_bytes = 524288
+max_lines = 8000
+
+[save]
+create_backup = false

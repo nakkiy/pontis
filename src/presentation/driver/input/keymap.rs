@@ -5,6 +5,7 @@ use crate::app::Focus;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ActionCommand {
     Quit,
+    ToggleHelp,
     FocusFileList,
     FocusDiff,
     SelectNextFile,
@@ -31,6 +32,7 @@ pub(super) enum ActionCommand {
     RedoMerge,
     EditRightWithEditor,
     EditLeftWithEditor,
+    ReloadComparison,
     ToggleAddedVisibility,
     ToggleModifiedVisibility,
     ToggleDeletedVisibility,
@@ -42,6 +44,9 @@ pub(super) enum ActionCommand {
 pub(super) fn resolve_command(key: KeyEvent, focus: Focus) -> Option<ActionCommand> {
     if key.code == KeyCode::Char('q') {
         return Some(ActionCommand::Quit);
+    }
+    if key.code == KeyCode::Char('?') {
+        return Some(ActionCommand::ToggleHelp);
     }
 
     if key.modifiers.contains(KeyModifiers::ALT) {
@@ -87,6 +92,7 @@ fn resolve_plain_command(code: KeyCode, focus: Focus) -> Option<ActionCommand> {
         KeyCode::Char('r') => Some(ActionCommand::RedoMerge),
         KeyCode::Char('e') => Some(ActionCommand::EditRightWithEditor),
         KeyCode::Char('E') => Some(ActionCommand::EditLeftWithEditor),
+        KeyCode::Char('l') => Some(ActionCommand::ReloadComparison),
         KeyCode::Char('A') if focus == Focus::FileList => {
             Some(ActionCommand::ToggleAddedVisibility)
         }
@@ -127,6 +133,18 @@ mod tests {
         assert_eq!(
             resolve_command(key(KeyCode::Down), Focus::Diff),
             Some(ActionCommand::ScrollDown(1))
+        );
+    }
+
+    #[test]
+    fn question_mark_maps_to_help() {
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('?')), Focus::FileList),
+            Some(ActionCommand::ToggleHelp)
+        );
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('?')), Focus::Diff),
+            Some(ActionCommand::ToggleHelp)
         );
     }
 
@@ -214,6 +232,18 @@ mod tests {
         assert_eq!(
             resolve_command(key(KeyCode::PageUp), Focus::Diff),
             Some(ActionCommand::ScrollUp(10))
+        );
+    }
+
+    #[test]
+    fn reload_key_maps_in_both_focuses() {
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('l')), Focus::FileList),
+            Some(ActionCommand::ReloadComparison)
+        );
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('l')), Focus::Diff),
+            Some(ActionCommand::ReloadComparison)
         );
     }
 

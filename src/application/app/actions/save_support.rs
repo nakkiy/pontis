@@ -18,7 +18,7 @@ pub(super) fn save_file_side_if_dirty(
     roots_mode: Mode,
     roots_left: &Path,
     roots_right: &Path,
-    backup_on_save: bool,
+    create_backup: bool,
 ) -> Result<usize> {
     let is_dirty = match side {
         FileSide::Left => file.left_dirty,
@@ -41,7 +41,7 @@ pub(super) fn save_file_side_if_dirty(
         FileSide::Right => file.right_has_utf8_bom,
     };
 
-    write_with_optional_backup(&path, &content, with_utf8_bom, backup_on_save)?;
+    write_with_optional_backup(&path, &content, with_utf8_bom, create_backup)?;
 
     match side {
         FileSide::Left => {

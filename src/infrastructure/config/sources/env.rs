@@ -5,74 +5,74 @@ use std::path::PathBuf;
 use crate::settings::AppSettings;
 
 use super::super::parse::{
-    parse_line_ending_policy, parse_line_ending_visibility, parse_whitespace_policy,
-    set_line_ending_policy, set_whitespace_policy,
+    parse_line_ending_visibility, parse_line_endings, parse_whitespace, set_line_endings,
+    set_whitespace,
 };
 use super::super::push_invalid_config_warning;
 
 pub(crate) fn apply_env_config(cfg: &mut AppSettings, warnings: &mut Vec<String>) {
-    if let Some(v) = env::var_os("PONTIS_BACKUP_ON_SAVE") {
+    if let Some(v) = env::var_os("PONTIS_SAVE_CREATE_BACKUP") {
         match parse_bool(v.to_string_lossy().as_ref()) {
-            Some(value) => cfg.backup_on_save = value,
-            None => push_invalid_config_warning(warnings, "PONTIS_BACKUP_ON_SAVE"),
+            Some(value) => cfg.save.create_backup = value,
+            None => push_invalid_config_warning(warnings, "PONTIS_SAVE_CREATE_BACKUP"),
         }
     }
 
     if let Some(v) = env::var_os("PONTIS_HIGHLIGHT_MAX_BYTES") {
         match v.to_string_lossy().parse::<usize>() {
-            Ok(value) => cfg.highlight_max_bytes = value,
+            Ok(value) => cfg.highlight.max_bytes = value,
             Err(_) => push_invalid_config_warning(warnings, "PONTIS_HIGHLIGHT_MAX_BYTES"),
         }
     }
 
     if let Some(v) = env::var_os("PONTIS_HIGHLIGHT_MAX_LINES") {
         match v.to_string_lossy().parse::<usize>() {
-            Ok(value) => cfg.highlight_max_lines = value,
+            Ok(value) => cfg.highlight.max_lines = value,
             Err(_) => push_invalid_config_warning(warnings, "PONTIS_HIGHLIGHT_MAX_LINES"),
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_THEME") {
+    if let Some(v) = env::var_os("PONTIS_HIGHLIGHT_THEME") {
         let value = v.to_string_lossy().trim().to_string();
         if value.is_empty() {
-            push_invalid_config_warning(warnings, "PONTIS_THEME");
+            push_invalid_config_warning(warnings, "PONTIS_HIGHLIGHT_THEME");
         } else {
-            cfg.theme = value;
+            cfg.highlight.theme = value;
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_INLINE_DIFF") {
+    if let Some(v) = env::var_os("PONTIS_COMPARE_INLINE_DIFF") {
         match parse_bool(v.to_string_lossy().as_ref()) {
-            Some(value) => cfg.inline_diff = value,
-            None => push_invalid_config_warning(warnings, "PONTIS_INLINE_DIFF"),
+            Some(value) => cfg.compare.inline_diff = value,
+            None => push_invalid_config_warning(warnings, "PONTIS_COMPARE_INLINE_DIFF"),
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_LINE_NUMBERS") {
+    if let Some(v) = env::var_os("PONTIS_VIEW_LINE_NUMBERS") {
         match parse_bool(v.to_string_lossy().as_ref()) {
-            Some(value) => cfg.line_numbers = value,
-            None => push_invalid_config_warning(warnings, "PONTIS_LINE_NUMBERS"),
+            Some(value) => cfg.view.line_numbers = value,
+            None => push_invalid_config_warning(warnings, "PONTIS_VIEW_LINE_NUMBERS"),
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_LINE_ENDING_VISIBILITY") {
+    if let Some(v) = env::var_os("PONTIS_VIEW_LINE_ENDING_VISIBILITY") {
         match parse_line_ending_visibility(v.to_string_lossy().as_ref()) {
-            Some(value) => cfg.line_ending_visibility = value,
-            None => push_invalid_config_warning(warnings, "PONTIS_LINE_ENDING_VISIBILITY"),
+            Some(value) => cfg.view.line_ending_visibility = value,
+            None => push_invalid_config_warning(warnings, "PONTIS_VIEW_LINE_ENDING_VISIBILITY"),
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_WHITESPACE_POLICY") {
-        match parse_whitespace_policy(v.to_string_lossy().as_ref()) {
-            Some(value) => set_whitespace_policy(cfg, value),
-            None => push_invalid_config_warning(warnings, "PONTIS_WHITESPACE_POLICY"),
+    if let Some(v) = env::var_os("PONTIS_COMPARE_WHITESPACE") {
+        match parse_whitespace(v.to_string_lossy().as_ref()) {
+            Some(value) => set_whitespace(cfg, value),
+            None => push_invalid_config_warning(warnings, "PONTIS_COMPARE_WHITESPACE"),
         }
     }
 
-    if let Some(v) = env::var_os("PONTIS_LINE_ENDING_POLICY") {
-        match parse_line_ending_policy(v.to_string_lossy().as_ref()) {
-            Some(value) => set_line_ending_policy(cfg, value),
-            None => push_invalid_config_warning(warnings, "PONTIS_LINE_ENDING_POLICY"),
+    if let Some(v) = env::var_os("PONTIS_COMPARE_LINE_ENDINGS") {
+        match parse_line_endings(v.to_string_lossy().as_ref()) {
+            Some(value) => set_line_endings(cfg, value),
+            None => push_invalid_config_warning(warnings, "PONTIS_COMPARE_LINE_ENDINGS"),
         }
     }
 }
@@ -112,9 +112,7 @@ mod tests {
     use crate::settings::{AppSettings, LineEndingVisibility};
 
     use super::{
-        super::super::parse::{
-            parse_line_ending_policy, parse_line_ending_visibility, parse_whitespace_policy,
-        },
+        super::super::parse::{parse_line_ending_visibility, parse_line_endings, parse_whitespace},
         apply_env_config, parse_bool, resolve_default_config_dir,
     };
 
@@ -148,28 +146,25 @@ mod tests {
         let mut warnings = Vec::new();
 
         unsafe {
-            std::env::set_var("PONTIS_INLINE_DIFF", "off");
+            std::env::set_var("PONTIS_COMPARE_INLINE_DIFF", "off");
         }
         apply_env_config(&mut cfg, &mut warnings);
         unsafe {
-            std::env::remove_var("PONTIS_INLINE_DIFF");
+            std::env::remove_var("PONTIS_COMPARE_INLINE_DIFF");
         }
 
-        assert!(!cfg.inline_diff);
+        assert!(!cfg.compare.inline_diff);
         assert!(warnings.is_empty());
     }
 
     #[test]
     fn parse_line_ending_policy_variants() {
         assert_eq!(
-            parse_line_ending_policy("compare"),
+            parse_line_endings("compare"),
             Some(LineEndingPolicy::Compare)
         );
-        assert_eq!(
-            parse_line_ending_policy("ignore"),
-            Some(LineEndingPolicy::Ignore)
-        );
-        assert_eq!(parse_line_ending_policy("bad"), None);
+        assert_eq!(parse_line_endings("ignore"), Some(LineEndingPolicy::Ignore));
+        assert_eq!(parse_line_endings("bad"), None);
     }
 
     #[test]
@@ -178,28 +173,22 @@ mod tests {
         let mut warnings = Vec::new();
 
         unsafe {
-            std::env::set_var("PONTIS_LINE_ENDING_POLICY", "ignore");
+            std::env::set_var("PONTIS_COMPARE_LINE_ENDINGS", "ignore");
         }
         apply_env_config(&mut cfg, &mut warnings);
         unsafe {
-            std::env::remove_var("PONTIS_LINE_ENDING_POLICY");
+            std::env::remove_var("PONTIS_COMPARE_LINE_ENDINGS");
         }
 
-        assert_eq!(cfg.line_ending_policy(), LineEndingPolicy::Ignore);
+        assert_eq!(cfg.line_endings(), LineEndingPolicy::Ignore);
         assert!(warnings.is_empty());
     }
 
     #[test]
     fn parse_whitespace_policy_variants() {
-        assert_eq!(
-            parse_whitespace_policy("compare"),
-            Some(WhitespacePolicy::Compare)
-        );
-        assert_eq!(
-            parse_whitespace_policy("ignore"),
-            Some(WhitespacePolicy::Ignore)
-        );
-        assert_eq!(parse_whitespace_policy("bad"), None);
+        assert_eq!(parse_whitespace("compare"), Some(WhitespacePolicy::Compare));
+        assert_eq!(parse_whitespace("ignore"), Some(WhitespacePolicy::Ignore));
+        assert_eq!(parse_whitespace("bad"), None);
     }
 
     #[test]
@@ -208,14 +197,14 @@ mod tests {
         let mut warnings = Vec::new();
 
         unsafe {
-            std::env::set_var("PONTIS_WHITESPACE_POLICY", "ignore");
+            std::env::set_var("PONTIS_COMPARE_WHITESPACE", "ignore");
         }
         apply_env_config(&mut cfg, &mut warnings);
         unsafe {
-            std::env::remove_var("PONTIS_WHITESPACE_POLICY");
+            std::env::remove_var("PONTIS_COMPARE_WHITESPACE");
         }
 
-        assert_eq!(cfg.whitespace_policy(), WhitespacePolicy::Ignore);
+        assert_eq!(cfg.whitespace(), WhitespacePolicy::Ignore);
         assert!(warnings.is_empty());
     }
 
@@ -225,14 +214,14 @@ mod tests {
         let mut warnings = Vec::new();
 
         unsafe {
-            std::env::set_var("PONTIS_THEME", "InspiredGitHub");
+            std::env::set_var("PONTIS_HIGHLIGHT_THEME", "InspiredGitHub");
         }
         apply_env_config(&mut cfg, &mut warnings);
         unsafe {
-            std::env::remove_var("PONTIS_THEME");
+            std::env::remove_var("PONTIS_HIGHLIGHT_THEME");
         }
 
-        assert_eq!(cfg.theme, "InspiredGitHub");
+        assert_eq!(cfg.highlight.theme, "InspiredGitHub");
         assert!(warnings.is_empty());
     }
 

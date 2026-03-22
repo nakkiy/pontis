@@ -131,7 +131,10 @@ fn file_mode_can_ignore_whitespace_only_changes() {
     assert!(!strict_files[0].hunks.is_empty());
 
     let cfg = AppSettings {
-        compare_policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+        compare: pontis::settings::CompareSettings {
+            policies: DiffComparePolicies::with_whitespace(WhitespacePolicy::Ignore),
+            ..AppSettings::default().compare
+        },
         ..AppSettings::default()
     };
     let (ignore_files, ignore_roots) =
@@ -162,10 +165,10 @@ fn file_mode_can_ignore_line_ending_only_changes() {
     assert!(!strict_files[0].hunks.is_empty());
 
     let cfg = AppSettings {
-        compare_policies: DiffComparePolicies::new(
-            WhitespacePolicy::Compare,
-            LineEndingPolicy::Ignore,
-        ),
+        compare: pontis::settings::CompareSettings {
+            policies: DiffComparePolicies::new(WhitespacePolicy::Compare, LineEndingPolicy::Ignore),
+            ..AppSettings::default().compare
+        },
         ..AppSettings::default()
     };
     let (ignore_files, ignore_roots) =

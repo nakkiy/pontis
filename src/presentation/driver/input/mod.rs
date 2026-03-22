@@ -2,23 +2,47 @@ use std::fmt::Display;
 
 use crossterm::event::KeyEvent;
 
-use crate::app::{App, MergeDirection};
+use crate::app::{App, MergeDirection, ReloadDecision};
 
 mod keymap;
 
 use self::keymap::{ActionCommand, resolve_command};
 
-pub(super) fn handle_key_event(app: &mut App, key: KeyEvent) -> bool {
-    if let Some(cmd) = resolve_command(key, app.focus()) {
-        execute_command(app, cmd);
-        return true;
-    }
-    false
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum InputOutcome {
+    None,
+    Redraw,
+    ReloadRequested,
 }
 
-fn execute_command(app: &mut App, cmd: ActionCommand) {
+pub(super) fn handle_key_event(app: &mut App, key: KeyEvent) -> InputOutcome {
+    if app.help_open() {
+        return handle_help_key_event(app, key);
+    }
+    if let Some(cmd) = resolve_command(key, app.focus()) {
+        return execute_command(app, cmd);
+    }
+    InputOutcome::None
+}
+
+fn handle_help_key_event(app: &mut App, key: KeyEvent) -> InputOutcome {
+    match key.code {
+        crossterm::event::KeyCode::Char('?') | crossterm::event::KeyCode::Esc => {
+            app.close_help();
+            InputOutcome::Redraw
+        }
+        crossterm::event::KeyCode::Char('q') => {
+            app.request_quit();
+            InputOutcome::Redraw
+        }
+        _ => InputOutcome::None,
+    }
+}
+
+fn execute_command(app: &mut App, cmd: ActionCommand) -> InputOutcome {
     match cmd {
         ActionCommand::Quit => app.request_quit(),
+        ActionCommand::ToggleHelp => app.toggle_help(),
         ActionCommand::FocusFileList => app.focus_file_list(),
         ActionCommand::FocusDiff => app.focus_diff(),
         ActionCommand::SelectNextFile => app.select_next_file(),
@@ -57,6 +81,12 @@ fn execute_command(app: &mut App, cmd: ActionCommand) {
             let result = app.edit_current_side_with_editor(true);
             report_action_result(app, "editor failed", result);
         }
+        ActionCommand::ReloadComparison => {
+            return match app.request_reload() {
+                ReloadDecision::Start => InputOutcome::ReloadRequested,
+                ReloadDecision::Rejected => InputOutcome::Redraw,
+            };
+        }
         ActionCommand::ToggleAddedVisibility => app.toggle_show_added(),
         ActionCommand::ToggleModifiedVisibility => app.toggle_show_modified(),
         ActionCommand::ToggleDeletedVisibility => app.toggle_show_deleted(),
@@ -64,6 +94,7 @@ fn execute_command(app: &mut App, cmd: ActionCommand) {
         ActionCommand::ToggleUnchangedVisibility => app.toggle_show_unchanged(),
         ActionCommand::ResetStatusFilter => app.reset_file_status_filter(),
     }
+    InputOutcome::Redraw
 }
 
 fn report_action_result<T, E>(app: &mut App, prefix: &str, result: Result<T, E>)

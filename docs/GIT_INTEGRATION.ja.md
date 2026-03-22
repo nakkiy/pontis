@@ -160,5 +160,7 @@ customCommands:
 ## 7. 注意点
 
 * `git --staged` / `git --diff` は read-only 比較です
+* `l` による再読込は `pontis git` と `pontis git --rev` で使えますが、`git --staged`、`git --diff`、`git difftool` 連携では使えません
+* 未保存変更がある間は再読込できません
 * binary ファイルはテキスト diff 表示されません
 * binary への hunk merge はできません

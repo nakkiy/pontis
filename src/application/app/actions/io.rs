@@ -30,11 +30,11 @@ pub(super) fn write_with_optional_backup(
     path: &Path,
     content: &str,
     with_utf8_bom: bool,
-    backup_on_save: bool,
+    create_backup: bool,
 ) -> Result<()> {
     ensure_parent(path)?;
 
-    if backup_on_save && path.exists() {
+    if create_backup && path.exists() {
         let backup_path = backup_path_for(path);
         fs::copy(path, &backup_path).with_context(|| {
             format!(

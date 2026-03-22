@@ -17,10 +17,10 @@ fn poll_prefetch_loads_current_file_and_focuses_first_hunk() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -47,10 +47,10 @@ fn ensure_current_loaded_sets_error_status_when_loader_fails() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         Arc::new(FailingLoader),
         true,
+        false,
         true,
     );
 
@@ -68,10 +68,10 @@ fn poll_prefetch_sets_error_status_for_current_file_failure() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -101,10 +101,10 @@ fn app_new_resolves_pending_status_in_background() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         Arc::new(StatusOnlyLoader),
         true,
+        false,
         true,
     );
 

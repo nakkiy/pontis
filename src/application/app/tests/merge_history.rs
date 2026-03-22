@@ -13,10 +13,10 @@ fn merge_left_to_right_applies_hunk() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::LeftToRight);
@@ -31,10 +31,10 @@ fn undo_and_redo_restore_merge_state() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::LeftToRight);
@@ -53,9 +53,9 @@ fn merge_into_read_only_side_is_blocked() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
+        false,
         false,
         true,
     );
@@ -71,10 +71,10 @@ fn scroll_is_clamped_to_known_diff_bounds() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -101,10 +101,10 @@ fn initial_loaded_file_focuses_first_hunk_once_scroll_limits_are_known() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -123,10 +123,10 @@ fn pending_hunk_focus_sync_does_not_override_later_manual_scroll() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -147,10 +147,10 @@ fn next_hunk_focus_uses_aligned_display_row_not_raw_line_index() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -172,10 +172,10 @@ fn merge_is_noop_when_no_visible_file_is_selected() {
     let mut app = App::new(
         vec![file],
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 

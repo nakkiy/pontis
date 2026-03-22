@@ -12,10 +12,10 @@ impl App {
     pub(crate) fn new(
         files: Vec<DiffFile>,
         roots: Roots,
-        backup_on_save: bool,
         settings: AppSettings,
         loader: Arc<dyn DiffLoader>,
         allow_left_write: bool,
+        reload_supported: bool,
         allow_right_write: bool,
     ) -> Self {
         let (prefetch_tx, prefetch_rx) = mpsc::channel();
@@ -28,11 +28,12 @@ impl App {
             current_hunk: 0,
             needs_hunk_focus_sync: false,
             focus: Focus::FileList,
+            help_open: false,
             should_quit: false,
             scroll: Default::default(),
             file_list_scroll: Default::default(),
-            backup_on_save,
             allow_left_write,
+            reload_supported,
             allow_right_write,
             settings,
             loader,

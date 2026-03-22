@@ -12,7 +12,7 @@ pub(crate) fn parse_line_ending_visibility(value: &str) -> Option<LineEndingVisi
     }
 }
 
-pub(crate) fn parse_line_ending_policy(value: &str) -> Option<LineEndingPolicy> {
+pub(crate) fn parse_line_endings(value: &str) -> Option<LineEndingPolicy> {
     match value.trim().to_ascii_lowercase().as_str() {
         "compare" => Some(LineEndingPolicy::Compare),
         "ignore" => Some(LineEndingPolicy::Ignore),
@@ -20,7 +20,7 @@ pub(crate) fn parse_line_ending_policy(value: &str) -> Option<LineEndingPolicy> 
     }
 }
 
-pub(crate) fn parse_whitespace_policy(value: &str) -> Option<WhitespacePolicy> {
+pub(crate) fn parse_whitespace(value: &str) -> Option<WhitespacePolicy> {
     match value.trim().to_ascii_lowercase().as_str() {
         "compare" => Some(WhitespacePolicy::Compare),
         "ignore" => Some(WhitespacePolicy::Ignore),
@@ -33,12 +33,12 @@ pub(crate) struct CliOverrides {
     pub config_path: Option<PathBuf>,
 }
 
-pub(crate) fn set_line_ending_policy(cfg: &mut AppSettings, policy: LineEndingPolicy) {
-    cfg.compare_policies = DiffComparePolicies::new(cfg.whitespace_policy(), policy);
+pub(crate) fn set_line_endings(cfg: &mut AppSettings, policy: LineEndingPolicy) {
+    cfg.compare.policies = DiffComparePolicies::new(cfg.whitespace(), policy);
 }
 
-pub(crate) fn set_whitespace_policy(cfg: &mut AppSettings, policy: WhitespacePolicy) {
-    cfg.compare_policies = DiffComparePolicies::new(policy, cfg.line_ending_policy());
+pub(crate) fn set_whitespace(cfg: &mut AppSettings, policy: WhitespacePolicy) {
+    cfg.compare.policies = DiffComparePolicies::new(policy, cfg.line_endings());
 }
 
 #[cfg(test)]
@@ -48,20 +48,20 @@ mod tests {
     #[test]
     fn default_line_ending_visibility_is_hidden() {
         assert_eq!(
-            AppSettings::default().line_ending_visibility,
+            AppSettings::default().view.line_ending_visibility,
             LineEndingVisibility::Hidden
         );
     }
 
     #[test]
     fn inline_diff_is_enabled_by_default() {
-        assert!(AppSettings::default().inline_diff);
+        assert!(AppSettings::default().compare.inline_diff);
     }
 
     #[test]
     fn line_ending_policy_defaults_to_compare() {
         assert_eq!(
-            AppSettings::default().line_ending_policy(),
+            AppSettings::default().line_endings(),
             LineEndingPolicy::Compare
         );
     }
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn whitespace_policy_defaults_to_compare() {
         assert_eq!(
-            AppSettings::default().whitespace_policy(),
+            AppSettings::default().whitespace(),
             WhitespacePolicy::Compare
         );
     }

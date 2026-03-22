@@ -30,6 +30,10 @@ impl App {
         self.focus
     }
 
+    pub(crate) fn help_open(&self) -> bool {
+        self.help_open
+    }
+
     pub(crate) fn current_hunk(&self) -> usize {
         self.current_hunk
     }
@@ -76,8 +80,14 @@ impl App {
         self.allow_right_write
     }
 
-    pub(crate) fn backup_on_save(&self) -> bool {
-        self.backup_on_save
+    pub(crate) fn create_backup(&self) -> bool {
+        self.settings.save.create_backup
+    }
+
+    pub(crate) fn has_unsaved_changes(&self) -> bool {
+        self.files
+            .iter()
+            .any(|file| file.left_dirty || file.right_dirty)
     }
 
     pub(crate) fn settings(&self) -> &AppSettings {
@@ -86,6 +96,19 @@ impl App {
 
     pub(crate) fn request_quit(&mut self) {
         self.should_quit = true;
+    }
+
+    pub(crate) fn toggle_help(&mut self) {
+        self.help_open = !self.help_open;
+        self.update_context_status();
+    }
+
+    pub(crate) fn close_help(&mut self) {
+        if !self.help_open {
+            return;
+        }
+        self.help_open = false;
+        self.update_context_status();
     }
 
     pub(crate) fn update_diff_scroll_limits(&mut self, max_scroll_y: u16, max_scroll_x: u16) {
@@ -128,7 +151,7 @@ impl App {
     }
 
     pub(crate) fn refresh_current_file_after_text_change(&mut self) {
-        let compare_policies = self.settings.compare_policies;
+        let compare_policies = self.settings.compare.policies;
         let Some(file) = self.current_file_mut() else {
             return;
         };

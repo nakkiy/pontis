@@ -6,22 +6,47 @@ use serde::Deserialize;
 use crate::settings::AppSettings;
 
 use super::super::parse::{
-    parse_line_ending_policy, parse_line_ending_visibility, parse_whitespace_policy,
-    set_line_ending_policy, set_whitespace_policy,
+    parse_line_ending_visibility, parse_line_endings, parse_whitespace, set_line_endings,
+    set_whitespace,
 };
 use super::super::push_invalid_config_warning;
 
 #[derive(Debug, Deserialize, Default)]
-struct FileConfig {
-    backup_on_save: Option<bool>,
-    highlight_max_bytes: Option<usize>,
-    highlight_max_lines: Option<usize>,
-    theme: Option<String>,
+#[serde(deny_unknown_fields)]
+struct CompareConfig {
+    whitespace: Option<String>,
+    line_endings: Option<String>,
     inline_diff: Option<bool>,
-    line_ending_policy: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct ViewConfig {
     line_numbers: Option<bool>,
     line_ending_visibility: Option<String>,
-    whitespace_policy: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct HighlightConfig {
+    theme: Option<String>,
+    max_bytes: Option<usize>,
+    max_lines: Option<usize>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct SaveConfig {
+    create_backup: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct FileConfig {
+    compare: Option<CompareConfig>,
+    view: Option<ViewConfig>,
+    highlight: Option<HighlightConfig>,
+    save: Option<SaveConfig>,
 }
 
 pub(crate) fn apply_file_config_from_path(
@@ -43,43 +68,54 @@ pub(crate) fn apply_file_config_from_path(
 }
 
 fn apply_file_config(cfg: &mut AppSettings, file_cfg: FileConfig, warnings: &mut Vec<String>) {
-    if let Some(v) = file_cfg.backup_on_save {
-        cfg.backup_on_save = v;
+    if let Some(compare) = file_cfg.compare {
+        if let Some(v) = compare.inline_diff {
+            cfg.compare.inline_diff = v;
+        }
+        if let Some(v) = compare.line_endings {
+            match parse_line_endings(&v) {
+                Some(policy) => set_line_endings(cfg, policy),
+                None => push_invalid_config_warning(warnings, "compare.line_endings"),
+            }
+        }
+        if let Some(v) = compare.whitespace {
+            match parse_whitespace(&v) {
+                Some(policy) => set_whitespace(cfg, policy),
+                None => push_invalid_config_warning(warnings, "compare.whitespace"),
+            }
+        }
     }
-    if let Some(v) = file_cfg.highlight_max_bytes {
-        cfg.highlight_max_bytes = v;
+
+    if let Some(view) = file_cfg.view {
+        if let Some(v) = view.line_numbers {
+            cfg.view.line_numbers = v;
+        }
+        if let Some(v) = view.line_ending_visibility {
+            match parse_line_ending_visibility(&v) {
+                Some(mode) => cfg.view.line_ending_visibility = mode,
+                None => push_invalid_config_warning(warnings, "view.line_ending_visibility"),
+            }
+        }
     }
-    if let Some(v) = file_cfg.highlight_max_lines {
-        cfg.highlight_max_lines = v;
+
+    if let Some(highlight) = file_cfg.highlight {
+        if let Some(v) = highlight.max_bytes {
+            cfg.highlight.max_bytes = v;
+        }
+        if let Some(v) = highlight.max_lines {
+            cfg.highlight.max_lines = v;
+        }
+        if let Some(v) = highlight.theme
+            && !v.trim().is_empty()
+        {
+            cfg.highlight.theme = v;
+        }
     }
-    if let Some(v) = file_cfg.theme
-        && !v.trim().is_empty()
+
+    if let Some(save) = file_cfg.save
+        && let Some(v) = save.create_backup
     {
-        cfg.theme = v;
-    }
-    if let Some(v) = file_cfg.inline_diff {
-        cfg.inline_diff = v;
-    }
-    if let Some(v) = file_cfg.line_ending_policy {
-        match parse_line_ending_policy(&v) {
-            Some(policy) => set_line_ending_policy(cfg, policy),
-            None => push_invalid_config_warning(warnings, "line_ending_policy"),
-        }
-    }
-    if let Some(v) = file_cfg.line_numbers {
-        cfg.line_numbers = v;
-    }
-    if let Some(v) = file_cfg.line_ending_visibility {
-        match parse_line_ending_visibility(&v) {
-            Some(mode) => cfg.line_ending_visibility = mode,
-            None => push_invalid_config_warning(warnings, "line_ending_visibility"),
-        }
-    }
-    if let Some(v) = file_cfg.whitespace_policy {
-        match parse_whitespace_policy(&v) {
-            Some(policy) => set_whitespace_policy(cfg, policy),
-            None => push_invalid_config_warning(warnings, "whitespace_policy"),
-        }
+        cfg.save.create_backup = v;
     }
 }
 
@@ -89,10 +125,8 @@ mod tests {
     use crate::settings::{AppSettings, LineEndingVisibility};
 
     use super::{
-        super::super::parse::{
-            parse_line_ending_policy, parse_line_ending_visibility, parse_whitespace_policy,
-        },
-        FileConfig, apply_file_config,
+        super::super::parse::{parse_line_ending_visibility, parse_line_endings, parse_whitespace},
+        CompareConfig, FileConfig, HighlightConfig, SaveConfig, ViewConfig, apply_file_config,
     };
 
     #[test]
@@ -120,44 +154,47 @@ mod tests {
         apply_file_config(
             &mut cfg,
             FileConfig {
-                inline_diff: Some(false),
+                compare: Some(CompareConfig {
+                    inline_diff: Some(false),
+                    ..CompareConfig::default()
+                }),
                 ..FileConfig::default()
             },
             &mut warnings,
         );
 
-        assert!(!cfg.inline_diff);
+        assert!(!cfg.compare.inline_diff);
         assert!(warnings.is_empty());
     }
 
     #[test]
-    fn parse_line_ending_policy_variants() {
+    fn parse_line_endings_variants() {
         assert_eq!(
-            parse_line_ending_policy("compare"),
+            parse_line_endings("compare"),
             Some(LineEndingPolicy::Compare)
         );
-        assert_eq!(
-            parse_line_ending_policy("ignore"),
-            Some(LineEndingPolicy::Ignore)
-        );
-        assert_eq!(parse_line_ending_policy("bad"), None);
+        assert_eq!(parse_line_endings("ignore"), Some(LineEndingPolicy::Ignore));
+        assert_eq!(parse_line_endings("bad"), None);
     }
 
     #[test]
-    fn apply_file_config_updates_line_ending_policy() {
+    fn apply_file_config_updates_line_endings() {
         let mut cfg = AppSettings::default();
         let mut warnings = Vec::new();
 
         apply_file_config(
             &mut cfg,
             FileConfig {
-                line_ending_policy: Some("ignore".to_string()),
+                compare: Some(CompareConfig {
+                    line_endings: Some("ignore".to_string()),
+                    ..CompareConfig::default()
+                }),
                 ..FileConfig::default()
             },
             &mut warnings,
         );
 
-        assert_eq!(cfg.line_ending_policy(), LineEndingPolicy::Ignore);
+        assert_eq!(cfg.line_endings(), LineEndingPolicy::Ignore);
         assert!(warnings.is_empty());
     }
 
@@ -169,44 +206,129 @@ mod tests {
         apply_file_config(
             &mut cfg,
             FileConfig {
-                theme: Some("InspiredGitHub".to_string()),
+                highlight: Some(HighlightConfig {
+                    theme: Some("InspiredGitHub".to_string()),
+                    ..HighlightConfig::default()
+                }),
                 ..FileConfig::default()
             },
             &mut warnings,
         );
 
-        assert_eq!(cfg.theme, "InspiredGitHub");
+        assert_eq!(cfg.highlight.theme, "InspiredGitHub");
         assert!(warnings.is_empty());
     }
 
     #[test]
-    fn parse_whitespace_policy_variants() {
-        assert_eq!(
-            parse_whitespace_policy("compare"),
-            Some(WhitespacePolicy::Compare)
-        );
-        assert_eq!(
-            parse_whitespace_policy("ignore"),
-            Some(WhitespacePolicy::Ignore)
-        );
-        assert_eq!(parse_whitespace_policy("bad"), None);
+    fn parse_whitespace_variants() {
+        assert_eq!(parse_whitespace("compare"), Some(WhitespacePolicy::Compare));
+        assert_eq!(parse_whitespace("ignore"), Some(WhitespacePolicy::Ignore));
+        assert_eq!(parse_whitespace("bad"), None);
     }
 
     #[test]
-    fn apply_file_config_updates_whitespace_policy() {
+    fn apply_file_config_updates_whitespace() {
         let mut cfg = AppSettings::default();
         let mut warnings = Vec::new();
 
         apply_file_config(
             &mut cfg,
             FileConfig {
-                whitespace_policy: Some("ignore".to_string()),
+                compare: Some(CompareConfig {
+                    whitespace: Some("ignore".to_string()),
+                    ..CompareConfig::default()
+                }),
                 ..FileConfig::default()
             },
             &mut warnings,
         );
 
-        assert_eq!(cfg.whitespace_policy(), WhitespacePolicy::Ignore);
+        assert_eq!(cfg.whitespace(), WhitespacePolicy::Ignore);
         assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn apply_file_config_updates_save_create_backup() {
+        let mut cfg = AppSettings::default();
+        let mut warnings = Vec::new();
+
+        apply_file_config(
+            &mut cfg,
+            FileConfig {
+                save: Some(SaveConfig {
+                    create_backup: Some(true),
+                }),
+                ..FileConfig::default()
+            },
+            &mut warnings,
+        );
+
+        assert!(cfg.save.create_backup);
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn apply_file_config_updates_view_settings() {
+        let mut cfg = AppSettings::default();
+        let mut warnings = Vec::new();
+
+        apply_file_config(
+            &mut cfg,
+            FileConfig {
+                view: Some(ViewConfig {
+                    line_numbers: Some(true),
+                    line_ending_visibility: Some("all".to_string()),
+                }),
+                ..FileConfig::default()
+            },
+            &mut warnings,
+        );
+
+        assert!(cfg.view.line_numbers);
+        assert_eq!(cfg.view.line_ending_visibility, LineEndingVisibility::All);
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn flat_keys_are_rejected() {
+        let raw = "backup_on_save = true\nhighlight_max_bytes = 1\n";
+        assert!(toml::from_str::<FileConfig>(raw).is_err());
+    }
+
+    #[test]
+    fn section_keys_are_deserialized() {
+        let raw = r#"
+            [compare]
+            whitespace = "ignore"
+            line_endings = "ignore"
+            inline_diff = false
+
+            [view]
+            line_numbers = true
+            line_ending_visibility = "all"
+
+            [highlight]
+            theme = "InspiredGitHub"
+            max_bytes = 123
+            max_lines = 456
+
+            [save]
+            create_backup = true
+        "#;
+
+        let parsed = toml::from_str::<FileConfig>(raw).expect("section config");
+        let compare = parsed.compare.expect("compare");
+        assert_eq!(compare.whitespace.as_deref(), Some("ignore"));
+        assert_eq!(compare.line_endings.as_deref(), Some("ignore"));
+        assert_eq!(compare.inline_diff, Some(false));
+        let view = parsed.view.expect("view");
+        assert_eq!(view.line_numbers, Some(true));
+        assert_eq!(view.line_ending_visibility.as_deref(), Some("all"));
+        let highlight = parsed.highlight.expect("highlight");
+        assert_eq!(highlight.theme.as_deref(), Some("InspiredGitHub"));
+        assert_eq!(highlight.max_bytes, Some(123));
+        assert_eq!(highlight.max_lines, Some(456));
+        let save = parsed.save.expect("save");
+        assert_eq!(save.create_backup, Some(true));
     }
 }

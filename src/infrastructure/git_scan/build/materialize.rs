@@ -85,7 +85,7 @@ fn build_entry_diff(
         },
         decoded.content,
         status,
-        cfg.compare_policies,
+        cfg.compare.policies,
     );
     if e.change == GitEntryChange::Renamed
         && let Some(original_rel_path) = e.original_path.clone()
@@ -143,16 +143,16 @@ fn decode_entry_content(
         && texts_equal(
             &left_decoded.text,
             &right_decoded.text,
-            cfg.whitespace_policy(),
-            cfg.line_ending_policy(),
+            cfg.whitespace(),
+            cfg.line_endings(),
         );
-    let highlight_limited = left_decoded.bytes.max(right_decoded.bytes) > cfg.highlight_max_bytes
+    let highlight_limited = left_decoded.bytes.max(right_decoded.bytes) > cfg.highlight.max_bytes
         || left_decoded
             .text
             .lines()
             .count()
             .max(right_decoded.text.lines().count())
-            > cfg.highlight_max_lines;
+            > cfg.highlight.max_lines;
 
     DecodedEntryContent {
         raw_bytes_equal,

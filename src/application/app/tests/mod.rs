@@ -3,6 +3,7 @@ mod helpers;
 mod merge_history;
 mod navigation;
 mod prefetch;
+mod reload;
 mod save;
 
 use std::path::PathBuf;

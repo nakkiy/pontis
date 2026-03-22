@@ -193,6 +193,7 @@ customCommands:
 | `u / r`     | undo / redo      |
 | `e / E`     | editor で開く    |
 | `s / S`     | 保存             |
+| `l`         | 比較を再読込     |
 
 ---
 
@@ -227,6 +228,9 @@ customCommands:
 * `pontis git` / `pontis git --rev` は右側のみ書き込み可
 * `pontis git --staged` は左右とも read-only
 * `pontis git --diff` と `git difftool` 連携は左右とも read-only
+* `l` による再読込はローカル比較と可変な git 比較（`pontis git`, `pontis git --rev`）で使えます
+* `l` による再読込は `pontis git --staged`、`pontis git --diff`、`git difftool` 連携では使えません
+* 未保存変更がある間は再読込できません
 * 外部 editor の変更は一度メモリへ取り込み、保存は `s` / `S` で明示的に行います
 * 外部 editor から戻ると merge の undo / redo 履歴はクリアされます
 
@@ -239,16 +243,25 @@ customCommands:
 * `${XDG_CONFIG_HOME}/pontis/config.toml`
 * `~/.config/pontis/config.toml`
 
+設定ファイルはセクション形式の TOML を使います。
+
 ```toml
-backup_on_save = false
-highlight_max_bytes = 524288
-highlight_max_lines = 8000
-theme = ""
+[compare]
+whitespace = "compare"
+line_endings = "compare"
 inline_diff = true
-line_ending_policy = "compare"
-whitespace_policy = "compare"
+
+[view]
 line_numbers = false
 line_ending_visibility = "hidden"
+
+[highlight]
+theme = ""
+max_bytes = 524288
+max_lines = 8000
+
+[save]
+create_backup = false
 ```
 
 ---
@@ -261,15 +274,15 @@ line_ending_visibility = "hidden"
 
 ### 環境変数
 
-* `PONTIS_BACKUP_ON_SAVE`
+* `PONTIS_SAVE_CREATE_BACKUP`
 * `PONTIS_HIGHLIGHT_MAX_BYTES`
 * `PONTIS_HIGHLIGHT_MAX_LINES`
-* `PONTIS_THEME`
-* `PONTIS_INLINE_DIFF`
-* `PONTIS_LINE_ENDING_POLICY`
-* `PONTIS_WHITESPACE_POLICY`
-* `PONTIS_LINE_NUMBERS`
-* `PONTIS_LINE_ENDING_VISIBILITY`
+* `PONTIS_HIGHLIGHT_THEME`
+* `PONTIS_COMPARE_INLINE_DIFF`
+* `PONTIS_COMPARE_LINE_ENDINGS`
+* `PONTIS_COMPARE_WHITESPACE`
+* `PONTIS_VIEW_LINE_NUMBERS`
+* `PONTIS_VIEW_LINE_ENDING_VISIBILITY`
 
 ---
 

@@ -17,10 +17,10 @@ fn next_hunk_or_file_skips_loaded_files_without_hunks() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -44,10 +44,10 @@ fn prev_hunk_or_file_skips_loaded_files_without_hunks_and_selects_last_hunk() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -71,10 +71,10 @@ fn file_list_scroll_follows_selection_when_it_goes_outside_viewport() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -93,10 +93,10 @@ fn file_list_horizontal_scroll_is_clamped_to_limits() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -117,10 +117,10 @@ fn file_list_page_navigation_moves_selection_by_ten_rows() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -143,10 +143,10 @@ fn file_list_horizontal_edge_navigation_moves_to_scroll_limits() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -166,10 +166,10 @@ fn focus_specific_hint_updates_when_focus_changes() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -197,10 +197,10 @@ fn status_filter_toggle_retargets_selection_when_current_is_hidden() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -223,10 +223,10 @@ fn file_navigation_skips_hidden_status_entries() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -252,10 +252,10 @@ fn turning_off_all_status_filters_hides_all_files() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -284,10 +284,10 @@ fn next_hunk_navigation_skips_hidden_files() {
     let mut app = App::new(
         files,
         roots,
-        false,
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
