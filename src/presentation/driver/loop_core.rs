@@ -10,14 +10,20 @@ use crate::syntax::SyntaxPainter;
 use crate::ui;
 use crate::ui::DiffViewRenderCache;
 
-use super::input;
+use super::input::{self, InputOutcome};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum LoopExit {
+    Quit,
+    ReloadRequested,
+}
 
 pub(super) fn run_event_loop(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     app: &mut App,
     painter: &SyntaxPainter,
     render_cache: &mut DiffViewRenderCache,
-) -> Result<()> {
+) -> Result<LoopExit> {
     let mut needs_draw = true;
     loop {
         if app.poll_prefetch() {
@@ -32,7 +38,7 @@ pub(super) fn run_event_loop(
         }
 
         if app.should_quit() {
-            break;
+            return Ok(LoopExit::Quit);
         }
 
         if !event::poll(Duration::from_millis(16))? {
@@ -47,8 +53,14 @@ pub(super) fn run_event_loop(
                 if app.tick_status() {
                     needs_draw = true;
                 }
-                if input::handle_key_event(app, key) {
-                    needs_draw = true;
+                match input::handle_key_event(app, key) {
+                    InputOutcome::None => {}
+                    InputOutcome::Redraw => {
+                        needs_draw = true;
+                    }
+                    InputOutcome::ReloadRequested => {
+                        return Ok(LoopExit::ReloadRequested);
+                    }
                 }
             }
             Event::Resize(_, _) => {
@@ -57,6 +69,4 @@ pub(super) fn run_event_loop(
             _ => {}
         }
     }
-
-    Ok(())
 }

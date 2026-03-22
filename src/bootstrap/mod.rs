@@ -7,7 +7,7 @@ use anyhow::Result;
 use crate::infrastructure::config::default_config_dir;
 use crate::infrastructure::fs_scan::FsDiffLoader;
 use crate::infrastructure::syntax_assets::load_syntax_assets;
-use crate::ports::DiffLoader;
+use crate::ports::{ComparisonReloader, DiffLoader, ReloadedTargets};
 use crate::presentation::driver::run_tui_with_loading;
 use crate::settings::AppSettings;
 use crate::syntax::SyntaxPainter;
@@ -25,6 +25,7 @@ pub(crate) struct RuntimePlan {
     settings: AppSettings,
     painter: SyntaxPainter,
     loader: Arc<dyn DiffLoader>,
+    reloader: Option<Arc<dyn ComparisonReloader>>,
     target_rx: Receiver<TargetBuildResult>,
 }
 
@@ -40,13 +41,20 @@ pub(crate) fn prepare_runtime(cli: &Cli) -> Result<RuntimePlan> {
         settings: cfg.clone(),
         painter,
         loader: Arc::new(FsDiffLoader),
+        reloader: build_reloader(cli),
         target_rx: spawn_target_build(cli.clone(), cfg),
     })
 }
 
 impl RuntimePlan {
     pub(crate) fn run(self) -> Result<()> {
-        run_tui_with_loading(self.settings, self.painter, self.loader, self.target_rx)
+        run_tui_with_loading(
+            self.settings,
+            self.painter,
+            self.loader,
+            self.reloader,
+            self.target_rx,
+        )
     }
 }
 
@@ -61,4 +69,29 @@ fn spawn_target_build(cli: Cli, cfg: AppSettings) -> Receiver<TargetBuildResult>
         let _ = tx.send(result);
     });
     rx
+}
+
+pub(super) fn reload_supported(cli: &Cli) -> bool {
+    match &cli.command {
+        None => true,
+        Some(cli::Commands::Git(git)) => !git.staged && git.diff.is_none(),
+    }
+}
+
+fn build_reloader(cli: &Cli) -> Option<Arc<dyn ComparisonReloader>> {
+    if !reload_supported(cli) {
+        return None;
+    }
+    Some(Arc::new(BootstrapReloader { cli: cli.clone() }))
+}
+
+#[derive(Debug, Clone)]
+struct BootstrapReloader {
+    cli: Cli,
+}
+
+impl ComparisonReloader for BootstrapReloader {
+    fn reload_targets(&self, cfg: &AppSettings) -> Result<ReloadedTargets> {
+        targets::build_comparison_targets(&self.cli, cfg)
+    }
 }

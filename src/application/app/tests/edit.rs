@@ -54,6 +54,7 @@ fn external_edit_clears_undo_and_redo_history() {
         },
         test_loader(),
         true,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::LeftToRight);
@@ -126,6 +127,7 @@ fn external_edit_does_not_create_backup_even_when_create_backup_is_enabled() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -189,6 +191,7 @@ fn external_edit_without_changes_preserves_dirty_merge_state_and_does_not_save()
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -259,6 +262,7 @@ fn external_edit_failure_does_not_modify_target_file() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -301,6 +305,7 @@ fn external_edit_is_noop_when_no_visible_file_is_selected() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 

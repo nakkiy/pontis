@@ -15,6 +15,7 @@ impl App {
         settings: AppSettings,
         loader: Arc<dyn DiffLoader>,
         allow_left_write: bool,
+        reload_supported: bool,
         allow_right_write: bool,
     ) -> Self {
         let (prefetch_tx, prefetch_rx) = mpsc::channel();
@@ -31,6 +32,7 @@ impl App {
             scroll: Default::default(),
             file_list_scroll: Default::default(),
             allow_left_write,
+            reload_supported,
             allow_right_write,
             settings,
             loader,

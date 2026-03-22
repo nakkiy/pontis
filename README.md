@@ -197,6 +197,7 @@ customCommands:
 | `u / r` | undo / redo |
 | `e / E` | open in editor |
 | `s / S` | save |
+| `l` | reload comparison |
 
 ---
 
@@ -231,6 +232,9 @@ customCommands:
 * `pontis git` / `pontis git --rev`: only the right side is writable
 * `pontis git --staged`: both sides are read-only
 * `pontis git --diff` and the `git difftool` bridge: both sides are read-only
+* `l` reload is available for local compare and mutable git compare (`pontis git`, `pontis git --rev`)
+* `l` reload is unavailable for `pontis git --staged`, `pontis git --diff`, and the `git difftool` bridge
+* Reload is rejected while there are unsaved changes
 * External editor changes are first applied back into memory; save them explicitly with `s` / `S`
 * Returning from the external editor clears merge undo / redo history
 

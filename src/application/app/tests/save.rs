@@ -55,6 +55,7 @@ fn save_all_writes_dirty_sides() {
         },
         test_loader(),
         true,
+        false,
         true,
     );
     app.save_all().expect("save all");
@@ -118,6 +119,7 @@ fn save_current_creates_backup_when_enabled() {
         },
         test_loader(),
         true,
+        false,
         true,
     );
     app.save_current().expect("save current");
@@ -174,6 +176,7 @@ fn save_current_preserves_utf8_bom_when_source_had_bom() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
     app.save_current().expect("save current");
@@ -196,6 +199,7 @@ fn save_current_keeps_read_only_dirty_side_unsaved() {
         roots,
         AppSettings::default(),
         test_loader(),
+        false,
         false,
         true,
     );
@@ -252,6 +256,7 @@ fn save_all_only_writes_writable_sides() {
         AppSettings::default(),
         test_loader(),
         false,
+        false,
         true,
     );
     app.save_all().expect("save all");
@@ -290,6 +295,7 @@ fn save_current_is_noop_when_no_visible_file_is_selected() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 

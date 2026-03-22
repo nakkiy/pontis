@@ -16,6 +16,7 @@ fn merge_left_to_right_applies_hunk() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::LeftToRight);
@@ -33,6 +34,7 @@ fn undo_and_redo_restore_merge_state() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::LeftToRight);
@@ -54,6 +56,7 @@ fn merge_into_read_only_side_is_blocked() {
         AppSettings::default(),
         test_loader(),
         false,
+        false,
         true,
     );
     app.merge_current_hunk(MergeDirection::RightToLeft);
@@ -71,6 +74,7 @@ fn scroll_is_clamped_to_known_diff_bounds() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -100,6 +104,7 @@ fn initial_loaded_file_focuses_first_hunk_once_scroll_limits_are_known() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -121,6 +126,7 @@ fn pending_hunk_focus_sync_does_not_override_later_manual_scroll() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -144,6 +150,7 @@ fn next_hunk_focus_uses_aligned_display_row_not_raw_line_index() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 
@@ -168,6 +175,7 @@ fn merge_is_noop_when_no_visible_file_is_selected() {
         AppSettings::default(),
         test_loader(),
         true,
+        false,
         true,
     );
 

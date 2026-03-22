@@ -8,6 +8,7 @@ use crate::settings::AppSettings;
 use super::Cli;
 use super::GitCommand;
 use super::cli::Commands;
+use super::reload_supported;
 use super::targets::build_comparison_targets;
 
 fn unique_temp_dir(prefix: &str) -> PathBuf {
@@ -380,4 +381,60 @@ fn git_difftool_bridge_uses_temp_dirs_and_revision_labels() {
     std::fs::remove_dir_all(repo).expect("cleanup repo");
     std::fs::remove_dir_all(left_dir).expect("cleanup left");
     std::fs::remove_dir_all(right_dir).expect("cleanup right");
+}
+
+#[test]
+fn reload_is_only_supported_for_mutable_compare_modes() {
+    let fs_cli = Cli {
+        left: Some(PathBuf::from("/tmp/left")),
+        right: Some(PathBuf::from("/tmp/right")),
+        config: None,
+        command: None,
+    };
+    assert!(reload_supported(&fs_cli));
+
+    let git_worktree_cli = Cli {
+        left: None,
+        right: None,
+        config: None,
+        command: Some(Commands::Git(GitCommand {
+            repo: Some(PathBuf::from("/tmp/repo")),
+            staged: false,
+            rev: Some("HEAD".to_string()),
+            diff: None,
+            difftool_left_dir: None,
+            difftool_right_dir: None,
+        })),
+    };
+    assert!(reload_supported(&git_worktree_cli));
+
+    let staged_cli = Cli {
+        left: None,
+        right: None,
+        config: None,
+        command: Some(Commands::Git(GitCommand {
+            repo: Some(PathBuf::from("/tmp/repo")),
+            staged: true,
+            rev: None,
+            diff: None,
+            difftool_left_dir: None,
+            difftool_right_dir: None,
+        })),
+    };
+    assert!(!reload_supported(&staged_cli));
+
+    let revision_pair_cli = Cli {
+        left: None,
+        right: None,
+        config: None,
+        command: Some(Commands::Git(GitCommand {
+            repo: Some(PathBuf::from("/tmp/repo")),
+            staged: false,
+            rev: None,
+            diff: Some(vec!["HEAD~1".to_string(), "HEAD".to_string()]),
+            difftool_left_dir: None,
+            difftool_right_dir: None,
+        })),
+    };
+    assert!(!reload_supported(&revision_pair_cli));
 }
