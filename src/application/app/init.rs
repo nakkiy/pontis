@@ -28,6 +28,7 @@ impl App {
             current_hunk: 0,
             needs_hunk_focus_sync: false,
             focus: Focus::FileList,
+            help_open: false,
             should_quit: false,
             scroll: Default::default(),
             file_list_scroll: Default::default(),
