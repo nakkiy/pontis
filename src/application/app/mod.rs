@@ -43,6 +43,7 @@ pub(crate) struct App {
     current_hunk: usize,
     needs_hunk_focus_sync: bool,
     focus: Focus,
+    help_open: bool,
     should_quit: bool,
     scroll: view_state::ScrollState,
     file_list_scroll: view_state::ScrollState,
@@ -109,6 +110,6 @@ impl FileStatusFilter {
 }
 
 impl App {
-    pub(super) const FILE_LIST_HINT: &'static str = "files: enter diff, up/down/pgup/pgdn move, left/right/home/end scroll | A/M/D/R/= toggle filter, f reset filter | l reload | alt+up/down hunk, alt+left/right merge | e right editor, E left editor | s save file, S save all | u/r undo/redo | q quit";
-    pub(super) const DIFF_HINT: &'static str = "diff: esc files, arrows/pgup/pgdn scroll, home/end h-edge | l reload | alt+up/down hunk, alt+left/right merge | e right editor, E left editor | s save file, S save all | u/r undo/redo | q quit";
+    pub(super) const FILE_LIST_HINT: &'static str = "enter: diff | ↑/↓: move | A/M/D/R/=: filter | alt+↑/↓: change | l: reload | ?: help | q: quit";
+    pub(super) const DIFF_HINT: &'static str = "esc: files | ↑/↓: scroll | alt+↑/↓: change | alt+←/→: merge | s: save | l: reload | ?: help | q: quit";
 }

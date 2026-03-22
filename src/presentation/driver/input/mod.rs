@@ -16,15 +16,33 @@ pub(super) enum InputOutcome {
 }
 
 pub(super) fn handle_key_event(app: &mut App, key: KeyEvent) -> InputOutcome {
+    if app.help_open() {
+        return handle_help_key_event(app, key);
+    }
     if let Some(cmd) = resolve_command(key, app.focus()) {
         return execute_command(app, cmd);
     }
     InputOutcome::None
 }
 
+fn handle_help_key_event(app: &mut App, key: KeyEvent) -> InputOutcome {
+    match key.code {
+        crossterm::event::KeyCode::Char('?') | crossterm::event::KeyCode::Esc => {
+            app.close_help();
+            InputOutcome::Redraw
+        }
+        crossterm::event::KeyCode::Char('q') => {
+            app.request_quit();
+            InputOutcome::Redraw
+        }
+        _ => InputOutcome::None,
+    }
+}
+
 fn execute_command(app: &mut App, cmd: ActionCommand) -> InputOutcome {
     match cmd {
         ActionCommand::Quit => app.request_quit(),
+        ActionCommand::ToggleHelp => app.toggle_help(),
         ActionCommand::FocusFileList => app.focus_file_list(),
         ActionCommand::FocusDiff => app.focus_diff(),
         ActionCommand::SelectNextFile => app.select_next_file(),

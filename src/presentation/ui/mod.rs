@@ -1,7 +1,8 @@
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::style::Style;
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::layout::{Constraint, Direction, Flex, Layout, Rect};
+use ratatui::style::{Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
 
 use crate::app::App;
 use crate::syntax::SyntaxPainter;
@@ -54,6 +55,10 @@ pub(crate) fn render(
 
     let status = Paragraph::new(app.status_line()).style(Style::default().fg(style::STATUS_FG));
     frame.render_widget(status, root[2]);
+
+    if app.help_open() {
+        render_help_overlay(frame, app);
+    }
 }
 
 pub(crate) fn render_loading(frame: &mut Frame<'_>, status: &str) {
@@ -92,4 +97,124 @@ pub(crate) fn render_loading(frame: &mut Frame<'_>, status: &str) {
     let footer =
         Paragraph::new(format!("{status} | q quit")).style(Style::default().fg(style::STATUS_FG));
     frame.render_widget(footer, root[2]);
+}
+
+fn render_help_overlay(frame: &mut Frame<'_>, _app: &App) {
+    let lines = help_lines();
+    let area = help_overlay_area(frame.area(), &lines);
+    let help = Paragraph::new(lines)
+        .wrap(Wrap { trim: false })
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Help")
+                .border_style(Style::default().fg(style::FOCUS_BORDER_FG)),
+        )
+        .style(Style::default().fg(style::STATUS_FG));
+    frame.render_widget(Clear, area);
+    frame.render_widget(help, area);
+}
+
+fn help_overlay_area(area: Rect, lines: &[Line<'static>]) -> Rect {
+    let vertical_margin = match area.height {
+        0..=12 => 1,
+        13..=24 => 2,
+        _ => 3,
+    };
+    let horizontal_margin = match area.width {
+        0..=50 => 1,
+        51..=80 => 3,
+        81..=120 => 6,
+        _ => 10,
+    };
+
+    let max_width = area.width.saturating_sub(horizontal_margin * 2).max(1);
+    let max_height = area.height.saturating_sub(vertical_margin * 2).max(1);
+
+    let content_width = lines
+        .iter()
+        .map(help_line_width)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(4) as u16;
+    let content_height = lines.len().saturating_add(2) as u16;
+
+    let min_width = max_width.min(area.width.min(24)).max(1);
+    let min_height = max_height.min(area.height.min(8)).max(1);
+    let desired_width = content_width.clamp(min_width, max_width);
+    let desired_height = content_height.clamp(min_height, max_height);
+
+    let centered_width = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Length(desired_width)])
+        .flex(Flex::Center)
+        .split(area)[0];
+
+    Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(desired_height)])
+        .flex(Flex::Center)
+        .split(Rect {
+            x: centered_width.x,
+            y: area.y,
+            width: centered_width.width,
+            height: area.height,
+        })[0]
+}
+
+fn help_line_width(line: &Line<'_>) -> usize {
+    line.spans.iter().map(|span| span.content.len()).sum()
+}
+
+fn help_lines() -> Vec<Line<'static>> {
+    vec![
+        help_section("Common"),
+        help_item("q", "Quit"),
+        help_item("? / esc", "Close help"),
+        help_item("l", "Reload comparison"),
+        help_item("s / S", "Save current / save all"),
+        help_item("u / r", "Undo / redo"),
+        help_item("e / E", "Open right / left in editor"),
+        Line::from(""),
+        help_section("File List"),
+        help_item("enter", "Open diff"),
+        help_item("↑ / ↓", "Move selection"),
+        help_item("PageUp / PageDown", "Move by 10 entries"),
+        help_item("← / →", "Horizontal scroll"),
+        help_item("Home / End", "Jump to horizontal edge"),
+        help_item("A / M / D / R / =", "Toggle status filter"),
+        help_item("f", "Reset filters"),
+        help_item("alt+↑ / ↓", "Previous / next change"),
+        Line::from(""),
+        help_section("Diff"),
+        help_item("esc", "Back to file list"),
+        help_item("↑ / ↓", "Vertical scroll"),
+        help_item("← / →", "Horizontal scroll"),
+        help_item("PageUp / PageDown", "Scroll by 10 lines"),
+        help_item("Home / End", "Jump to horizontal edge"),
+        help_item("alt+↑ / ↓", "Previous / next change"),
+        help_item("alt+← / →", "Apply current hunk"),
+    ]
+}
+
+fn help_section(title: &'static str) -> Line<'static> {
+    Line::from(Span::styled(
+        title,
+        Style::default()
+            .fg(style::HEADER_FG)
+            .add_modifier(Modifier::BOLD),
+    ))
+}
+
+fn help_item(keys: &'static str, description: &'static str) -> Line<'static> {
+    Line::from(vec![
+        Span::raw("  "),
+        Span::styled(
+            format!("{keys:<22}"),
+            Style::default()
+                .fg(style::FOCUS_BORDER_FG)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::raw(description),
+    ])
 }

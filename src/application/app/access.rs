@@ -30,6 +30,10 @@ impl App {
         self.focus
     }
 
+    pub(crate) fn help_open(&self) -> bool {
+        self.help_open
+    }
+
     pub(crate) fn current_hunk(&self) -> usize {
         self.current_hunk
     }
@@ -92,6 +96,19 @@ impl App {
 
     pub(crate) fn request_quit(&mut self) {
         self.should_quit = true;
+    }
+
+    pub(crate) fn toggle_help(&mut self) {
+        self.help_open = !self.help_open;
+        self.update_context_status();
+    }
+
+    pub(crate) fn close_help(&mut self) {
+        if !self.help_open {
+            return;
+        }
+        self.help_open = false;
+        self.update_context_status();
     }
 
     pub(crate) fn update_diff_scroll_limits(&mut self, max_scroll_y: u16, max_scroll_x: u16) {

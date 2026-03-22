@@ -5,6 +5,7 @@ use crate::app::Focus;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum ActionCommand {
     Quit,
+    ToggleHelp,
     FocusFileList,
     FocusDiff,
     SelectNextFile,
@@ -43,6 +44,9 @@ pub(super) enum ActionCommand {
 pub(super) fn resolve_command(key: KeyEvent, focus: Focus) -> Option<ActionCommand> {
     if key.code == KeyCode::Char('q') {
         return Some(ActionCommand::Quit);
+    }
+    if key.code == KeyCode::Char('?') {
+        return Some(ActionCommand::ToggleHelp);
     }
 
     if key.modifiers.contains(KeyModifiers::ALT) {
@@ -129,6 +133,18 @@ mod tests {
         assert_eq!(
             resolve_command(key(KeyCode::Down), Focus::Diff),
             Some(ActionCommand::ScrollDown(1))
+        );
+    }
+
+    #[test]
+    fn question_mark_maps_to_help() {
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('?')), Focus::FileList),
+            Some(ActionCommand::ToggleHelp)
+        );
+        assert_eq!(
+            resolve_command(key(KeyCode::Char('?')), Focus::Diff),
+            Some(ActionCommand::ToggleHelp)
         );
     }
 
